@@ -82,6 +82,12 @@ function readConfig(configPath) {
   return config;
 }
 
+function readLocalSettings() {
+  const settingsPath = path.resolve(ROOT, ".trackalo/plugins.json");
+  if (!fs.existsSync(settingsPath)) return {};
+  return JSON.parse(fs.readFileSync(settingsPath, "utf8"));
+}
+
 function runGit(args, cwd) {
   try {
     return execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
@@ -238,9 +244,9 @@ function renderPostText(summary) {
   ].join("\n");
 }
 
-async function postSlack(text) {
-  const url = process.env.SLACK_WEBHOOK_URL;
-  if (!url) throw new Error("SLACK_WEBHOOK_URL is not set.");
+async function postSlack(text, settings = readLocalSettings()) {
+  const url = process.env.SLACK_WEBHOOK_URL || (settings.slack && settings.slack.webhook_url);
+  if (!url) throw new Error("Slack webhook is not configured. Set SLACK_WEBHOOK_URL or .trackalo/plugins.json slack.webhook_url.");
   const response = await fetch(url, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -249,10 +255,11 @@ async function postSlack(text) {
   if (!response.ok) throw new Error(`Slack post failed: ${response.status}`);
 }
 
-async function postTelegram(text) {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
-  if (!token || !chatId) throw new Error("TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are required.");
+async function postTelegram(text, settings = readLocalSettings()) {
+  const telegram = settings.telegram || {};
+  const token = process.env.TELEGRAM_BOT_TOKEN || telegram.bot_token;
+  const chatId = process.env.TELEGRAM_CHAT_ID || telegram.chat_id;
+  if (!token || !chatId) throw new Error("Telegram is not configured. Set TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID or .trackalo/plugins.json telegram credentials.");
   const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -263,11 +270,16 @@ async function postTelegram(text) {
 
 async function postSummary(target, summary) {
   const text = renderPostText(summary);
-  if (target === "slack") return postSlack(text);
-  if (target === "telegram") return postTelegram(text);
+  const settings = readLocalSettings();
+  if (target === "slack") return postSlack(text, settings);
+  if (target === "telegram") return postTelegram(text, settings);
   if (target === "all") {
-    await postSlack(text);
-    await postTelegram(text);
+    const enabled = settings.enabled || [];
+    const targets = enabled.length ? enabled : ["slack", "telegram"];
+    for (const item of targets) {
+      if (item === "slack") await postSlack(text, settings);
+      else if (item === "telegram") await postTelegram(text, settings);
+    }
     return undefined;
   }
   throw new Error(`Unknown post target: ${target}`);
@@ -304,8 +316,11 @@ if (require.main === module) {
 
 module.exports = {
   collectFileActivity,
+  nextDateString,
+  postSummary,
   previousWorkingDay,
   readConfig,
+  readLocalSettings,
   renderPostText,
   renderSummary,
   summarize,

@@ -19,6 +19,27 @@ npm run summary -- --date 2026-05-01 --stdout
 
 Generated summaries are written to `project/summaries/YYYY-MM-DD.md`.
 
+## Automatic Codex Startup
+
+This repo includes a project-local Codex hook in [.codex/config.toml](.codex/config.toml). When you open Codex in this trusted project, the hook runs `tools/codex-startup-summary.js` in the background.
+
+The startup script:
+
+- Runs only during the configured morning window, default `06:00-12:00`.
+- Computes the previous working day.
+- Writes `project/summaries/YYYY-MM-DD.md`.
+- Posts to configured plugins once per target day.
+- Records local state in `.trackalo/startup-summary-state.json`.
+
+No environment variables are required for daily use. Put local plugin credentials in `.trackalo/plugins.json`:
+
+```bash
+mkdir -p .trackalo
+cp plugins.example.json .trackalo/plugins.json
+```
+
+Then edit `.trackalo/plugins.json`. That file is ignored by Git.
+
 ## What It Reads
 
 Trackalo only reads sources configured in [project/config.md](project/config.md):
@@ -35,13 +56,13 @@ raw/activities/2026-05-01-customer-call.md
 
 ## Posting Plugins
 
-Slack:
+Manual Slack post:
 
 ```bash
 SLACK_WEBHOOK_URL="https://hooks.slack.com/..." npm run summary -- --post slack
 ```
 
-Telegram:
+Manual Telegram post:
 
 ```bash
 TELEGRAM_BOT_TOKEN="..." TELEGRAM_CHAT_ID="..." npm run summary -- --post telegram
@@ -60,7 +81,7 @@ Plugin setup notes live in:
 
 ## Scheduling
 
-Use cron, launchd, GitHub Actions on a trusted runner, or any existing scheduler. Example weekday cron at 09:00:
+Codex startup is the default lightweight automation path. Use cron, launchd, GitHub Actions on a trusted runner, or any existing scheduler only if you want automation independent of opening Codex. Example weekday cron at 09:00:
 
 ```cron
 0 9 * * 1-5 cd /path/to/trackalo && npm run summary -- --post all

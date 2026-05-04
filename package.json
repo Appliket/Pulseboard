@@ -6,7 +6,7 @@
   "type": "commonjs",
   "scripts": {
     "summary": "node tools/daily-summary.js",
-    "check": "node tests/daily-summary.test.js"
+    "check": "node tests/daily-summary.test.js && node tests/startup-summary.test.js"
   },
   "engines": {
     "node": ">=20"

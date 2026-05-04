@@ -23,6 +23,7 @@ The core product is intentionally small:
 - `project/summaries/` stores generated daily summaries.
 - `project/log.md` stores maintained project history.
 - `plugins/` stores outbound posting integrations.
+- `.codex/config.toml` stores the project-local Codex startup hook.
 - `tools/` stores small local scripts.
 - `tests/` stores script tests.
 
@@ -30,6 +31,7 @@ The core product is intentionally small:
 
 - Default target day is the previous working day.
 - Monday summarizes Friday unless configuration changes working days.
+- Codex startup automation must be idempotent and post at most once per target day.
 - Summaries must only use configured local repositories, configured docs paths, and `raw/activities/`.
 - Do not invent activity. If no activity is found, say so.
 - Generated summaries may be rebuilt.
@@ -43,7 +45,7 @@ The core product is intentionally small:
 - Plugins must not mutate repository files except by invoking the summary generator.
 - Add new integrations under `plugins/<name>/`.
 - Plugin credentials, webhook URLs, bot tokens, cookies, and secrets must never be committed.
-- Use environment variables or untracked local files for secrets.
+- Prefer `.trackalo/plugins.json` for local plugin credentials. Environment variables are allowed for manual runs.
 
 ## Configuration Rules
 

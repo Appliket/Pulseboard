@@ -3,3 +3,5 @@ node_modules/
 .trackalo/
 .DS_Store
 npm-debug.log*
+project/summaries/*.md
+!project/summaries/.gitkeep
