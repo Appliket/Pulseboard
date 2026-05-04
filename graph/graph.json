@@ -1,0 +1,73 @@
+{
+  "edges": [
+    {
+      "source": "index",
+      "target": "board",
+      "type": "wikilink"
+    },
+    {
+      "source": "index",
+      "target": "config",
+      "type": "wikilink"
+    },
+    {
+      "source": "index",
+      "target": "info/index",
+      "type": "wikilink"
+    },
+    {
+      "source": "index",
+      "target": "log",
+      "type": "wikilink"
+    },
+    {
+      "source": "index",
+      "target": "overview",
+      "type": "wikilink"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "board",
+      "kind": "page",
+      "path": "project/board.md",
+      "status": "",
+      "title": "board"
+    },
+    {
+      "id": "config",
+      "kind": "project-config",
+      "path": "project/config.md",
+      "status": "",
+      "title": "Project Configuration"
+    },
+    {
+      "id": "info/index",
+      "kind": "info-index",
+      "path": "project/info/index.md",
+      "status": "",
+      "title": "Info Index"
+    },
+    {
+      "id": "index",
+      "kind": "page",
+      "path": "project/index.md",
+      "status": "",
+      "title": "index"
+    },
+    {
+      "id": "log",
+      "kind": "page",
+      "path": "project/log.md",
+      "status": "",
+      "title": "log"
+    },
+    {
+      "id": "overview",
+      "kind": "page",
+      "path": "project/overview.md",
+      "status": "",
+      "title": "overview"
+    }
+  ]
+}
