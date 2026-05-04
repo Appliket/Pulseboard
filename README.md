@@ -1,49 +1,75 @@
-# Technical Project Wiki
+# Trackalo
 
-Technical Project Wiki is a markdown-first, graph-backed project-management system for local agile/Kanban execution.
+Trackalo is a local-first daily activity digest for project work. It looks at configured repositories, docs, and local activity notes, generates a summary for the last working day, and optionally posts that summary to channels through small plugins.
 
-The MVP follows the Karpathy/LLM Wiki style: no Python, no package install, no database, no vector store, no SaaS dependency, and no background service. Durable request material lives in `raw/`; maintained project pages live in `project/`; generated topology artifacts live in `graph/`.
+There is no bot listener, database, vector store, hosted service, or shared AI account in the core. Integrations are outbound-only: Slack, Telegram, or future plugins receive a digest once a day.
 
 ## Quick Start
 
-Open this folder with an LLM coding agent and ask it to follow [AGENTS.md](AGENTS.md).
-
-Example agent commands:
-
-```text
-Configure this wiki for my app: categories feature, bug, chore; priorities p0-p3; repo owner/example-web at ../example-web
-Add "Add Google login to onboarding"
-Update [[add-google-login-onboarding]] to in-progress
-Check the project wiki
-Injest these architecture notes into project info: ...
+```bash
+npm run check
+npm run summary -- --stdout
 ```
 
-Open `project/board.md` in Obsidian with the Kanban plugin enabled to see the human status board.
+By default, `npm run summary` summarizes the previous working day. On Monday it summarizes Friday. To force a day:
 
-## Commands
+```bash
+npm run summary -- --date 2026-05-01 --stdout
+```
 
-- `Configure`: follow [commands/Configure.md](commands/Configure.md).
-- `Add`: follow [commands/Add.md](commands/Add.md).
-- `Check`: follow [commands/Check.md](commands/Check.md).
-- `Update`: follow [commands/Update.md](commands/Update.md).
-- `Injest`: follow [commands/Injest.md](commands/Injest.md).
+Generated summaries are written to `project/summaries/YYYY-MM-DD.md`.
 
-Graph artifacts are maintained automatically by the agent whenever project topology changes; there is no separate user-facing graph command.
+## What It Reads
 
-Ask for a dry run or preview when you want planned file changes without edits.
+Trackalo only reads sources configured in [project/config.md](project/config.md):
 
-## Inference Model
+- Git commits from configured local repositories.
+- Maintained docs under configured docs paths.
+- Manual activity notes under `raw/activities/`.
 
-Task fields should be inferred by the agent from evidence: current request, existing task history, configured repository code/docs, maintained pages in `project/info/`, raw source material, decisions, risks, checks, graph artifacts, and tentative GitHub suggestions.
+Raw activity notes are append-only source material. Use filenames like:
 
-Use `raw/info/` for immutable captured reference material and `project/info/` for maintained summaries and inference hints. Task pages should cite the evidence used to infer status, category, priority, areas, repositories, dependencies, acceptance criteria, and validation state.
+```text
+raw/activities/2026-05-01-customer-call.md
+```
 
-## GitHub Bootstrap
+## Posting Plugins
 
-GitHub bootstrap never imports every issue as a task. It only proposes tentative categories, priorities, areas, and repository mappings.
+Slack:
 
-Use an approved GitHub connector, GitHub CLI, or pasted issue/label summaries. Never store tokens or secrets. Review the `GitHub-Derived Suggestions` section in `project/config.md` before treating inferred conventions as policy.
+```bash
+SLACK_WEBHOOK_URL="https://hooks.slack.com/..." npm run summary -- --post slack
+```
 
-## No Runtime Contract
+Telegram:
 
-This repo should remain inspectable as plain files. Do not add framework-heavy tooling for the MVP. If automation is added later, it must be optional and must not replace the markdown command protocol.
+```bash
+TELEGRAM_BOT_TOKEN="..." TELEGRAM_CHAT_ID="..." npm run summary -- --post telegram
+```
+
+Post to every configured plugin:
+
+```bash
+npm run summary -- --post all
+```
+
+Plugin setup notes live in:
+
+- [plugins/slack/README.md](plugins/slack/README.md)
+- [plugins/telegram/README.md](plugins/telegram/README.md)
+
+## Scheduling
+
+Use cron, launchd, GitHub Actions on a trusted runner, or any existing scheduler. Example weekday cron at 09:00:
+
+```cron
+0 9 * * 1-5 cd /path/to/trackalo && npm run summary -- --post all
+```
+
+The tool computes the previous working day, so Monday morning produces Friday's digest.
+
+## Configuration
+
+Edit [project/config.md](project/config.md). The summary tool reads the fenced JSON block in that file.
+
+Keep tokens and webhook URLs out of Git. Use environment variables or a local `.env` file.

@@ -1,0 +1,14 @@
+{
+  "name": "trackalo",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Local activity digests with optional channel posting plugins.",
+  "type": "commonjs",
+  "scripts": {
+    "summary": "node tools/daily-summary.js",
+    "check": "node tests/daily-summary.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

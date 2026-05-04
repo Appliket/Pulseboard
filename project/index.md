@@ -1,14 +1,13 @@
-# Project Index
+---
+type: project-index
+title: Trackalo Project Index
+updated: 2026-05-04
+---
 
-- [[overview]]
-- [[config]]
-- [[board]]
-- [[log]]
-- [[info/index]]
+# Trackalo Project Index
 
-## Task Views
-
-- Tasks live in `project/tasks/`.
-- Maintained inference context lives in `project/info/`.
-- Generated checks live in `project/checks/`.
-- Generated graph artifacts live in `graph/`.
+- [[config|Configuration]]
+- [[log|Project Log]]
+- [[info/index|Info Index]]
+- `project/summaries/` generated daily digests
+- `raw/activities/` append-only manual activity notes
