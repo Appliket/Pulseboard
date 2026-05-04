@@ -4,7 +4,7 @@ These rules govern AI-assisted work in this repository.
 
 ## Purpose
 
-Trackalo is a local-first daily activity digest. It analyzes configured repositories, maintained docs, and raw activity notes related to this project, then generates a previous-working-day summary. Optional plugins post that summary to channels such as Slack or Telegram.
+This repository is a Trackalo template instance. It analyzes configured repositories, maintained docs, and raw activity notes related to the project, then generates a previous-working-day summary. Optional plugins post that summary to channels such as Slack or Telegram.
 
 The core product is intentionally small:
 
@@ -20,6 +20,7 @@ The core product is intentionally small:
 - `raw/info/` stores append-only durable reference material.
 - Never mutate, rewrite, summarize over, or delete raw source files. Add a new raw file for corrections.
 - `project/config.md` stores digest configuration.
+- `plugins.example.json` is a non-secret local plugin configuration template.
 - `project/summaries/` stores generated daily summaries.
 - `project/log.md` stores maintained project history.
 - `plugins/` stores outbound posting integrations.

@@ -1,8 +1,19 @@
-# Trackalo
+# Trackalo Template
 
-Trackalo is a local-first daily activity digest for project work. It looks at configured repositories, docs, and local activity notes, generates a summary for the last working day, and optionally posts that summary to channels through small plugins.
+Trackalo Template is a local-first daily activity digest starter. It looks at configured repositories, docs, and local activity notes, generates a summary for the last working day, and optionally posts that summary to channels through small outbound plugins.
 
 There is no bot listener, database, vector store, hosted service, or shared AI account in the core. Integrations are outbound-only: Slack, Telegram, or future plugins receive a digest once a day.
+
+## Use This Template
+
+Create a new repository from this template, then initialize its project config:
+
+```bash
+npm run init -- --project "My Project" --repo-name my-project --github owner/my-project
+npm run check
+```
+
+The init command updates [project/config.md](project/config.md) and creates `.trackalo/plugins.json` from [plugins.example.json](plugins.example.json). The `.trackalo/` directory is ignored by Git.
 
 ## Quick Start
 
@@ -17,11 +28,11 @@ By default, `npm run summary` summarizes the previous working day. On Monday it 
 npm run summary -- --date 2026-05-01 --stdout
 ```
 
-Generated summaries are written to `project/summaries/YYYY-MM-DD.md`.
+Generated summaries are written locally to `project/summaries/YYYY-MM-DD.md`. Generated summary markdown is ignored by Git by default.
 
 ## Automatic Codex Startup
 
-This repo includes a project-local Codex hook in [.codex/config.toml](.codex/config.toml). When you open Codex in this trusted project, the hook runs `tools/codex-startup-summary.js` in the background.
+This template includes a project-local Codex hook in [.codex/config.toml](.codex/config.toml). When you open Codex in a trusted project created from this template, the hook runs `tools/codex-startup-summary.js` in the background.
 
 The startup script:
 
@@ -68,7 +79,7 @@ Manual Telegram post:
 TELEGRAM_BOT_TOKEN="..." TELEGRAM_CHAT_ID="..." npm run summary -- --post telegram
 ```
 
-Post to every configured plugin:
+Post to every locally configured plugin:
 
 ```bash
 npm run summary -- --post all
@@ -84,7 +95,7 @@ Plugin setup notes live in:
 Codex startup is the default lightweight automation path. Use cron, launchd, GitHub Actions on a trusted runner, or any existing scheduler only if you want automation independent of opening Codex. Example weekday cron at 09:00:
 
 ```cron
-0 9 * * 1-5 cd /path/to/trackalo && npm run summary -- --post all
+0 9 * * 1-5 cd /path/to/project && npm run summary -- --post all
 ```
 
 The tool computes the previous working day, so Monday morning produces Friday's digest.
@@ -93,4 +104,4 @@ The tool computes the previous working day, so Monday morning produces Friday's 
 
 Edit [project/config.md](project/config.md). The summary tool reads the fenced JSON block in that file.
 
-Keep tokens and webhook URLs out of Git. Use environment variables or a local `.env` file.
+Keep tokens and webhook URLs out of Git. Use `.trackalo/plugins.json`, environment variables, or another local secret store.

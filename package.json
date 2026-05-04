@@ -1,12 +1,13 @@
 {
-  "name": "trackalo",
+  "name": "trackalo-template",
   "version": "0.2.0",
   "private": true,
   "description": "Local activity digests with optional channel posting plugins.",
   "type": "commonjs",
   "scripts": {
+    "init": "node tools/init-template.js",
     "summary": "node tools/daily-summary.js",
-    "check": "node tests/daily-summary.test.js && node tests/startup-summary.test.js"
+    "check": "node tests/daily-summary.test.js && node tests/startup-summary.test.js && node tests/init-template.test.js"
   },
   "engines": {
     "node": ">=20"

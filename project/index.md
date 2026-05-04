@@ -1,10 +1,10 @@
 ---
 type: project-index
-title: Trackalo Project Index
+title: Daily Digest Project Index
 updated: 2026-05-04
 ---
 
-# Trackalo Project Index
+# Daily Digest Project Index
 
 - [[config|Configuration]]
 - [[log|Project Log]]

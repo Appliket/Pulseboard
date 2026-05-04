@@ -10,15 +10,15 @@ The summary tool reads the JSON block below. Keep secrets out of this file.
 
 ```json
 {
-  "project": "Trackalo",
+  "project": "My Project",
   "timezone": "Europe/Rome",
   "working_days": [1, 2, 3, 4, 5],
   "summary_dir": "project/summaries",
   "repositories": [
     {
-      "name": "trackalo",
+      "name": "my-project",
       "path": ".",
-      "github": "Appliket/trackalo",
+      "github": "",
       "areas": ["docs", "automation", "integrations"]
     }
   ],
