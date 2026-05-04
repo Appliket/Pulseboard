@@ -4,6 +4,8 @@ Pulseboard Template is a local-first project-management and daily activity diges
 
 There is no bot listener, database, vector store, hosted service, or shared AI account in the core. Project management remains plain markdown. Integrations are outbound-only: Slack, Telegram, or future plugins receive a digest once a day.
 
+GitHub is optional. Pulseboard can mirror selected implementation-ready task records to GitHub issues, but planning, coherence, audits, and maintained project knowledge stay local by default.
+
 ## Use This Template
 
 Create a new repository from this template, then initialize its project config:
@@ -32,6 +34,8 @@ Add "Build the account settings page"
 Update [[build-account-settings-page]] to in-progress
 Check the project wiki
 Injest these architecture notes into project info: ...
+Repurpose audit for the configured app and docs
+Sync GitHub issues
 ```
 
 By default, `npm run summary` summarizes the previous working day. On Monday it summarizes Friday. To force a day:
@@ -103,10 +107,39 @@ The template keeps the original local-first project-management workflow:
 - `project/board.md`: Obsidian Kanban human status board.
 - `project/tasks/`: canonical structured task records.
 - `project/info/`: maintained project context.
-- `commands/`: agent-readable procedures for Configure, Add, Update, Check, Injest, and Graph.
+- `commands/`: agent-readable procedures for Configure, Add, Update, Check, Injest, Graph, Repurpose Audit, and Sync GitHub Issues.
 - `graph/`: rebuildable topology artifacts.
 
 The daily digest layer does not replace the wiki. It summarizes activity from the wiki, docs, raw notes, and configured repositories so stakeholders can get status without entering Obsidian.
+
+## Repurpose Audits
+
+Use `Repurpose audit` when a project needs a product, migration, cleanup, or reuse pass. The procedure reads configured local repositories and docs, plus explicitly configured external wiki/docs paths if present.
+
+The audit workflow creates:
+
+- Append-only source notes under `raw/activities/YYYY-MM-DD-*.md`.
+- One maintained plan page under `project/info/*-plan.md`.
+- A small number of concrete task records under `project/tasks/*.md`.
+- Optional GitHub issues later, only for implementation-ready tasks.
+
+The maintained plan should say what should be done, what is still needed, and what can be deleted, archived, or deferred. Raw files are source material and must not be rewritten.
+
+## GitHub Issue Sync
+
+Use `Sync GitHub issues` when task records should be mirrored to GitHub. This command is optional and requires configured repository `github` slugs in `project/config.md`.
+
+The sync procedure:
+
+- Lists existing open issues first.
+- Avoids duplicate issues by title, task id, existing `github_issue` URLs, and overlapping scope.
+- Creates issues only from implementation-ready task records when `github_issue` is absent.
+- Writes created issue URLs back into task frontmatter.
+- Adds an append-only raw activity note.
+- Updates `project/log.md`.
+- Runs `npm run check`, `npm run summary -- --dry-run`, and a tracked-file secret scan.
+
+Planning/coherence tasks should usually remain local. Do not use GitHub as the canonical board; Pulseboard task records and `project/board.md` remain the source of truth.
 
 ## Posting Plugins
 
@@ -148,3 +181,8 @@ The tool computes the previous working day, so Monday morning produces Friday's 
 Edit [project/config.md](project/config.md). The summary tool reads the fenced JSON block in that file.
 
 Keep tokens and webhook URLs out of Git. Use `.pulseboard/plugins.json`, environment variables, or another local secret store.
+
+Optional fields:
+
+- `external_docs`: explicit local wiki/docs paths an audit may inspect.
+- `issue_sync`: local settings for optional GitHub issue mirroring.

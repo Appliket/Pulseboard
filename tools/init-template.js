@@ -119,7 +119,14 @@ function configMarkdown(options) {
       },
     ],
     docs: ["README.md", "AGENTS.md", "project", "plugins"],
+    external_docs: [],
     activities: ["raw/activities"],
+    issue_sync: {
+      enabled: false,
+      provider: "github",
+      implementation_ready_statuses: ["todo", "in-progress"],
+      local_only_categories: ["docs"],
+    },
     plugins: {
       slack: { enabled: false, env: "SLACK_WEBHOOK_URL" },
       telegram: { enabled: false, env: ["TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"] },

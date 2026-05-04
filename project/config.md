@@ -87,9 +87,16 @@ The summary tool reads the JSON block below. Keep secrets out of this file.
     "project",
     "plugins"
   ],
+  "external_docs": [],
   "activities": [
     "raw/activities"
   ],
+  "issue_sync": {
+    "enabled": false,
+    "provider": "github",
+    "implementation_ready_statuses": ["todo", "in-progress"],
+    "local_only_categories": ["docs"]
+  },
   "plugins": {
     "slack": {
       "enabled": false,

@@ -21,6 +21,9 @@ Flag:
 - `done` tasks without validation evidence.
 - Stale wikilinks or missing linked files.
 - Architecture mismatch, such as frontend work implying backend/API work without backend/API links.
+- `github_issue` placeholders or malformed issue URLs.
+- Implementation-ready tasks that appear duplicated by another local task or synced issue.
+- Planning/coherence tasks that were unnecessarily pushed toward GitHub issue sync.
 
 ## Output
 

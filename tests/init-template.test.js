@@ -16,5 +16,8 @@ assert.match(markdown, /"github": "acme\/client-portal"/);
 assert.match(markdown, /"task_states": \[/);
 assert.match(markdown, /"categories": \[/);
 assert.match(markdown, /"priorities": \[/);
+assert.match(markdown, /"external_docs": \[\]/);
+assert.match(markdown, /"issue_sync": \{/);
+assert.match(markdown, /"implementation_ready_statuses": \[/);
 
 console.log("init template tests passed");
