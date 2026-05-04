@@ -4,13 +4,15 @@ These rules govern AI-assisted work in this repository.
 
 ## Purpose
 
-This repository is a Trackalo template instance. It analyzes configured repositories, maintained docs, and raw activity notes related to the project, then generates a previous-working-day summary. Optional plugins post that summary to channels such as Slack or Telegram.
+This repository is a Trackalo template instance. It combines a Karpathy/LLM Wiki style project-management system with optional daily digest plugins.
+
+Project work is represented as small markdown task nodes connected through wikilinks and explicit metadata. The Obsidian Kanban board is the canonical human status view. The graph is the dependency/coherence view. Daily digest plugins summarize previous-working-day activity and post it outbound to channels such as Slack or Telegram.
 
 The core product is intentionally small:
 
 - No inbound bot listener.
 - No shared AI account.
-- No database, vector store, SaaS backend, or background service.
+- No database, vector store, SaaS backend, or required background service.
 - No framework-heavy runtime.
 - Outbound plugins only post summaries.
 
@@ -20,6 +22,11 @@ The core product is intentionally small:
 - `raw/info/` stores append-only durable reference material.
 - Never mutate, rewrite, summarize over, or delete raw source files. Add a new raw file for corrections.
 - `project/config.md` stores digest configuration.
+- `project/board.md` stores the Obsidian Kanban board.
+- `project/tasks/` stores markdown task records.
+- `project/checks/` stores generated check reports.
+- `commands/` stores agent command procedures.
+- `graph/` stores generated graph artifacts.
 - `plugins.example.json` is a non-secret local plugin configuration template.
 - `project/summaries/` stores generated daily summaries.
 - `project/log.md` stores maintained project history.
@@ -38,6 +45,18 @@ The core product is intentionally small:
 - Do not invent activity. If no activity is found, say so.
 - Generated summaries may be rebuilt.
 - Raw activity and info files are source material and must not be mutated after capture.
+
+## Project Wiki Rules
+
+- Users invoke project-management commands by asking the agent, for example `Add "request text"` or `Update [[task-id]] to in-progress`.
+- Follow `commands/Configure.md`, `commands/Add.md`, `commands/Update.md`, `commands/Check.md`, `commands/Injest.md`, and `commands/Graph.md`.
+- Allowed task states are exactly `todo`, `in-progress`, `in-review`, and `done`.
+- `project/board.md` must keep Obsidian Kanban frontmatter: `kanban-plugin: board`.
+- Board lanes must remain exactly `## To Do`, `## In Progress`, `## In Review`, and `## Done`.
+- Cards must be checkbox wikilinks like `- [ ] [[task-id]]`.
+- Each non-archived task must appear exactly once on the board.
+- Task status and board lane must agree.
+- Graph artifacts are rebuildable and must not be treated as source of truth.
 
 ## Plugin Rules
 

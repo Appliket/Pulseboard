@@ -13,5 +13,8 @@ const markdown = configMarkdown({
 assert.match(markdown, /"project": "Client Portal"/);
 assert.match(markdown, /"name": "client-portal"/);
 assert.match(markdown, /"github": "acme\/client-portal"/);
+assert.match(markdown, /"task_states": \[/);
+assert.match(markdown, /"categories": \[/);
+assert.match(markdown, /"priorities": \[/);
 
 console.log("init template tests passed");

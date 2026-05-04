@@ -51,6 +51,65 @@ function configMarkdown(options) {
     timezone: options.timezone,
     working_days: [1, 2, 3, 4, 5],
     summary_dir: "project/summaries",
+    task_states: ["todo", "in-progress", "in-review", "done"],
+    areas: [
+      "docs",
+      "info",
+      "frontend",
+      "backend",
+      "mobile",
+      "api",
+      "database",
+      "design",
+      "infrastructure",
+      "tests",
+      "automation",
+      "integrations",
+    ],
+    categories: [
+      {
+        key: "feature",
+        description: "New user-facing or workflow capability.",
+        examples: ["Add Google login to onboarding."],
+      },
+      {
+        key: "bug",
+        description: "Broken or incorrect behavior.",
+        examples: ["Fix checkout error when payment fails."],
+      },
+      {
+        key: "chore",
+        description: "Maintenance, tooling, cleanup, or operational work.",
+        examples: ["Add digest automation to project startup."],
+      },
+      {
+        key: "docs",
+        description: "Documentation, project knowledge, or specification work.",
+        examples: ["Document the plugin setup flow."],
+      },
+    ],
+    priorities: [
+      {
+        key: "p0",
+        description: "Urgent blocker or severe user impact.",
+        examples: ["Users cannot access the product."],
+      },
+      {
+        key: "p1",
+        description: "Important near-term work.",
+        examples: ["Add a required customer delivery flow."],
+      },
+      {
+        key: "p2",
+        description: "Useful planned work without immediate delivery pressure.",
+        examples: ["Improve empty states."],
+      },
+      {
+        key: "p3",
+        description: "Low urgency cleanup or exploratory work.",
+        examples: ["Rename an internal helper."],
+      },
+    ],
     repositories: [
       {
         name: repoName,

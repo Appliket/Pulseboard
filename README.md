@@ -1,8 +1,8 @@
 # Trackalo Template
 
-Trackalo Template is a local-first daily activity digest starter. It looks at configured repositories, docs, and local activity notes, generates a summary for the last working day, and optionally posts that summary to channels through small outbound plugins.
+Trackalo Template is a local-first project-management and daily activity digest starter. The primary workflow is the Karpathy/LLM Wiki style markdown system: tasks, Obsidian Kanban, and graph coherence. Plugins are secondary outbound reporting surfaces for stakeholders such as a CEO.
 
-There is no bot listener, database, vector store, hosted service, or shared AI account in the core. Integrations are outbound-only: Slack, Telegram, or future plugins receive a digest once a day.
+There is no bot listener, database, vector store, hosted service, or shared AI account in the core. Project management remains plain markdown. Integrations are outbound-only: Slack, Telegram, or future plugins receive a digest once a day.
 
 ## Use This Template
 
@@ -20,6 +20,18 @@ The init command updates [project/config.md](project/config.md) and creates `.tr
 ```bash
 npm run check
 npm run summary -- --stdout
+```
+
+Open `project/board.md` in Obsidian with the Kanban plugin enabled to manage the human status board.
+
+Ask any coding agent to follow [AGENTS.md](AGENTS.md), then use project commands in natural language:
+
+```text
+Configure this project for my app: categories feature, bug, chore; priorities p0-p3; repo owner/example at .
+Add "Build the account settings page"
+Update [[build-account-settings-page]] to in-progress
+Check the project wiki
+Injest these architecture notes into project info: ...
 ```
 
 By default, `npm run summary` summarizes the previous working day. On Monday it summarizes Friday. To force a day:
@@ -76,12 +88,25 @@ Trackalo only reads sources configured in [project/config.md](project/config.md)
 - Git commits from configured local repositories.
 - Maintained docs under configured docs paths.
 - Manual activity notes under `raw/activities/`.
+- Project-management pages under `project/`, including task records and checks.
 
 Raw activity notes are append-only source material. Use filenames like:
 
 ```text
 raw/activities/2026-05-01-customer-call.md
 ```
+
+## Markdown Project Wiki
+
+The template keeps the original local-first project-management workflow:
+
+- `project/board.md`: Obsidian Kanban human status board.
+- `project/tasks/`: canonical structured task records.
+- `project/info/`: maintained project context.
+- `commands/`: agent-readable procedures for Configure, Add, Update, Check, Injest, and Graph.
+- `graph/`: rebuildable topology artifacts.
+
+The daily digest layer does not replace the wiki. It summarizes activity from the wiki, docs, raw notes, and configured repositories so stakeholders can get status without entering Obsidian.
 
 ## Posting Plugins
 
