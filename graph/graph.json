@@ -31,10 +31,10 @@
     },
     {
       "id": "config",
-      "kind": "trackalo-config",
+      "kind": "pulseboard-config",
       "path": "project/config.md",
       "status": "",
-      "title": "Trackalo Configuration"
+      "title": "Pulseboard Configuration"
     },
     {
       "id": "info/index",
@@ -48,7 +48,7 @@
       "kind": "project-index",
       "path": "project/index.md",
       "status": "",
-      "title": "Daily Digest Project Index"
+      "title": "Pulseboard Index"
     },
     {
       "id": "log",

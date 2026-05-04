@@ -10,7 +10,7 @@ const WEEKDAYS = new Set([1, 2, 3, 4, 5]);
 
 function parseArgs(argv) {
   const options = {
-    config: process.env.TRACKALO_CONFIG || DEFAULT_CONFIG,
+    config: process.env.PULSEBOARD_CONFIG || process.env.TRACKALO_CONFIG || DEFAULT_CONFIG,
     date: "",
     stdout: false,
     dryRun: false,
@@ -78,12 +78,12 @@ function readConfig(configPath) {
   config.repositories = config.repositories || [];
   config.docs = config.docs || [];
   config.activities = config.activities || ["raw/activities"];
-  config.summary_dir = process.env.TRACKALO_SUMMARY_DIR || config.summary_dir || DEFAULT_SUMMARY_DIR;
+  config.summary_dir = process.env.PULSEBOARD_SUMMARY_DIR || process.env.TRACKALO_SUMMARY_DIR || config.summary_dir || DEFAULT_SUMMARY_DIR;
   return config;
 }
 
 function readLocalSettings() {
-  const settingsPath = path.resolve(ROOT, ".trackalo/plugins.json");
+  const settingsPath = path.resolve(ROOT, ".pulseboard/plugins.json");
   if (!fs.existsSync(settingsPath)) return {};
   return JSON.parse(fs.readFileSync(settingsPath, "utf8"));
 }
@@ -237,7 +237,7 @@ function renderPostText(summary) {
     .flatMap((repo) => repo.commits.map((commit) => `- ${commit.subject} (${repo.name})`))
     .slice(0, 8);
   return [
-    `Trackalo daily summary for ${summary.targetDate}`,
+    `Pulseboard daily summary for ${summary.targetDate}`,
     `${commits} commit(s), ${docs} doc/activity update(s).`,
     "",
     ...(headlines.length ? headlines : ["No related activity found."]),
@@ -246,7 +246,7 @@ function renderPostText(summary) {
 
 async function postSlack(text, settings = readLocalSettings()) {
   const url = process.env.SLACK_WEBHOOK_URL || (settings.slack && settings.slack.webhook_url);
-  if (!url) throw new Error("Slack webhook is not configured. Set SLACK_WEBHOOK_URL or .trackalo/plugins.json slack.webhook_url.");
+  if (!url) throw new Error("Slack webhook is not configured. Set SLACK_WEBHOOK_URL or .pulseboard/plugins.json slack.webhook_url.");
   const response = await fetch(url, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -259,7 +259,7 @@ async function postTelegram(text, settings = readLocalSettings()) {
   const telegram = settings.telegram || {};
   const token = process.env.TELEGRAM_BOT_TOKEN || telegram.bot_token;
   const chatId = process.env.TELEGRAM_CHAT_ID || telegram.chat_id;
-  if (!token || !chatId) throw new Error("Telegram is not configured. Set TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID or .trackalo/plugins.json telegram credentials.");
+  if (!token || !chatId) throw new Error("Telegram is not configured. Set TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID or .pulseboard/plugins.json telegram credentials.");
   const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: "POST",
     headers: { "content-type": "application/json" },

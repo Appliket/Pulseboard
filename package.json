@@ -1,5 +1,5 @@
 {
-  "name": "trackalo-template",
+  "name": "pulseboard-template",
   "version": "0.2.0",
   "private": true,
   "description": "Local activity digests with optional channel posting plugins.",

@@ -11,7 +11,7 @@ const {
 } = require("./daily-summary");
 
 const ROOT = path.resolve(__dirname, "..");
-const STATE_PATH = path.resolve(ROOT, ".trackalo/startup-summary-state.json");
+const STATE_PATH = path.resolve(ROOT, ".pulseboard/startup-summary-state.json");
 
 function localDateString(date) {
   const year = date.getFullYear();
@@ -44,7 +44,7 @@ async function run(options = {}) {
   if (settings.auto_on_agent_start === false || settings.auto_on_codex_start === false) return { skipped: "disabled" };
   if (!options.force && !isMorning(now, settings)) return { skipped: "outside morning window" };
 
-  const config = readConfig(process.env.TRACKALO_CONFIG || "project/config.md");
+  const config = readConfig(process.env.PULSEBOARD_CONFIG || process.env.TRACKALO_CONFIG || "project/config.md");
   const workingDays = new Set(config.working_days || [1, 2, 3, 4, 5]);
   const targetDate = options.date || previousWorkingDay(now, workingDays);
   const state = loadState();
@@ -79,11 +79,11 @@ async function run(options = {}) {
 if (require.main === module) {
   const force = process.argv.includes("--force");
   run({ force }).then((result) => {
-    if (process.env.TRACKALO_STARTUP_VERBOSE === "1") {
+    if (process.env.PULSEBOARD_STARTUP_VERBOSE === "1" || process.env.TRACKALO_STARTUP_VERBOSE === "1") {
       console.log(JSON.stringify(result));
     }
   }).catch((error) => {
-    console.error(`Trackalo startup summary failed: ${error.message}`);
+    console.error(`Pulseboard startup summary failed: ${error.message}`);
     process.exitCode = 1;
   });
 }

@@ -44,7 +44,7 @@ function kebab(value) {
 }
 
 function configMarkdown(options) {
-  const project = options.project || "My Project";
+  const project = options.project || "Pulseboard";
   const repoName = options.repoName || kebab(project);
   const config = {
     project,
@@ -128,12 +128,12 @@ function configMarkdown(options) {
 
   return [
     "---",
-    "type: trackalo-config",
-    "title: Trackalo Configuration",
+    "type: pulseboard-config",
+    "title: Pulseboard Configuration",
     `updated: ${new Date().toISOString().slice(0, 10)}`,
     "---",
     "",
-    "# Trackalo Configuration",
+    "# Pulseboard Configuration",
     "",
     "The summary tool reads the JSON block below. Keep secrets out of this file.",
     "",
@@ -151,13 +151,13 @@ function main() {
     return;
   }
   fs.writeFileSync(path.join(ROOT, "project/config.md"), configMarkdown(options));
-  fs.mkdirSync(path.join(ROOT, ".trackalo"), { recursive: true });
-  const localPluginsPath = path.join(ROOT, ".trackalo/plugins.json");
+  fs.mkdirSync(path.join(ROOT, ".pulseboard"), { recursive: true });
+  const localPluginsPath = path.join(ROOT, ".pulseboard/plugins.json");
   if (!fs.existsSync(localPluginsPath)) {
     fs.copyFileSync(path.join(ROOT, "plugins.example.json"), localPluginsPath);
   }
   console.log("Template initialized.");
-  console.log("Edit .trackalo/plugins.json with local Slack/Telegram credentials when ready.");
+  console.log("Edit .pulseboard/plugins.json with local Slack/Telegram credentials when ready.");
 }
 
 if (require.main === module) {

@@ -1,10 +1,10 @@
 ---
 type: project-index
-title: Project Index
+title: Pulseboard Index
 updated: 2026-05-04
 ---
 
-# Project Index
+# Pulseboard Index
 
 - [[config|Configuration]]
 - [[board|Kanban Board]]

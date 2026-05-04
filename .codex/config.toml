@@ -8,4 +8,4 @@ type = "command"
 command = "node tools/codex-startup-summary.js"
 async = true
 timeout = 30000
-statusMessage = "Trackalo daily summary check"
+statusMessage = "Pulseboard daily summary check"

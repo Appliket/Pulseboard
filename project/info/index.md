@@ -6,7 +6,7 @@ updated: 2026-05-04
 
 # Info Index
 
-Maintained context pages live here. Trackalo summaries may include updates to these pages when `project/` is configured as a docs source.
+Maintained context pages live here. Pulseboard summaries may include updates to these pages when `project/` is configured as a docs source.
 
 ## Pages
 

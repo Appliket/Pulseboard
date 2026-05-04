@@ -1,16 +1,16 @@
 ---
-type: trackalo-config
-title: Trackalo Configuration
+type: pulseboard-config
+title: Pulseboard Configuration
 updated: 2026-05-04
 ---
 
-# Trackalo Configuration
+# Pulseboard Configuration
 
 The summary tool reads the JSON block below. Keep secrets out of this file.
 
 ```json
 {
-  "project": "My Project",
+  "project": "Pulseboard",
   "timezone": "Europe/Rome",
   "working_days": [1, 2, 3, 4, 5],
   "summary_dir": "project/summaries",
@@ -75,7 +75,7 @@ The summary tool reads the JSON block below. Keep secrets out of this file.
   ],
   "repositories": [
     {
-      "name": "my-project",
+      "name": "pulseboard",
       "path": ".",
       "github": "",
       "areas": ["docs", "automation", "integrations"]

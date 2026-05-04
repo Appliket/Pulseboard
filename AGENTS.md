@@ -1,10 +1,10 @@
-# Trackalo Agent Rules
+# Pulseboard Agent Rules
 
 These rules govern AI-assisted work in this repository.
 
 ## Purpose
 
-This repository is a Trackalo template instance. It combines a Karpathy/LLM Wiki style project-management system with optional daily digest plugins.
+This repository is a Pulseboard template instance. It combines a Karpathy/LLM Wiki style project-management system with optional daily digest plugins.
 
 Project work is represented as small markdown task nodes connected through wikilinks and explicit metadata. The Obsidian Kanban board is the canonical human status view. The graph is the dependency/coherence view. Daily digest plugins summarize previous-working-day activity and post it outbound to channels such as Slack or Telegram.
 
@@ -66,7 +66,7 @@ The core product is intentionally small:
 - Plugins must not mutate repository files except by invoking the summary generator.
 - Add new integrations under `plugins/<name>/`.
 - Plugin credentials, webhook URLs, bot tokens, cookies, and secrets must never be committed.
-- Prefer `.trackalo/plugins.json` for local plugin credentials. Environment variables are allowed for manual runs.
+- Prefer `.pulseboard/plugins.json` for local plugin credentials. Environment variables are allowed for manual runs.
 
 ## Configuration Rules
 

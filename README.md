@@ -1,6 +1,6 @@
-# Trackalo Template
+# Pulseboard Template
 
-Trackalo Template is a local-first project-management and daily activity digest starter. The primary workflow is the Karpathy/LLM Wiki style markdown system: tasks, Obsidian Kanban, and graph coherence. Plugins are secondary outbound reporting surfaces for stakeholders such as a CEO.
+Pulseboard Template is a local-first project-management and daily activity digest starter. The primary workflow is the Karpathy/LLM Wiki style markdown system: tasks, Obsidian Kanban, and graph coherence. Plugins are secondary outbound reporting surfaces for stakeholders such as a CEO.
 
 There is no bot listener, database, vector store, hosted service, or shared AI account in the core. Project management remains plain markdown. Integrations are outbound-only: Slack, Telegram, or future plugins receive a digest once a day.
 
@@ -13,7 +13,7 @@ npm run init -- --project "My Project" --repo-name my-project --github owner/my-
 npm run check
 ```
 
-The init command updates [project/config.md](project/config.md) and creates `.trackalo/plugins.json` from [plugins.example.json](plugins.example.json). The `.trackalo/` directory is ignored by Git.
+The init command updates [project/config.md](project/config.md) and creates `.pulseboard/plugins.json` from [plugins.example.json](plugins.example.json). The `.pulseboard/` directory is ignored by Git.
 
 ## Quick Start
 
@@ -52,16 +52,16 @@ The startup script:
 - Computes the previous working day.
 - Writes `project/summaries/YYYY-MM-DD.md`.
 - Posts to configured plugins once per target day.
-- Records local state in `.trackalo/startup-summary-state.json`.
+- Records local state in `.pulseboard/startup-summary-state.json`.
 
-No environment variables are required for daily use. Put local plugin credentials in `.trackalo/plugins.json`:
+No environment variables are required for daily use. Put local plugin credentials in `.pulseboard/plugins.json`:
 
 ```bash
-mkdir -p .trackalo
-cp plugins.example.json .trackalo/plugins.json
+mkdir -p .pulseboard
+cp plugins.example.json .pulseboard/plugins.json
 ```
 
-Then edit `.trackalo/plugins.json`. That file is ignored by Git.
+Then edit `.pulseboard/plugins.json`. That file is ignored by Git.
 
 ## Other Agents
 
@@ -76,14 +76,14 @@ Agent integration contract:
 - Run `npm run agent-start` when the agent opens or attaches to the project.
 - It is safe to call multiple times; it posts at most once per target day.
 - It exits quietly outside the morning window.
-- It uses `.trackalo/plugins.json` for local plugin credentials.
+- It uses `.pulseboard/plugins.json` for local plugin credentials.
 - It writes generated summaries under `project/summaries/`.
 
 For agents that support project startup hooks, configure that hook to run `npm run agent-start`. For agents without hooks, use cron/launchd or a shell alias that opens the agent and then runs the command.
 
 ## What It Reads
 
-Trackalo only reads sources configured in [project/config.md](project/config.md):
+Pulseboard only reads sources configured in [project/config.md](project/config.md):
 
 - Git commits from configured local repositories.
 - Maintained docs under configured docs paths.
@@ -147,4 +147,4 @@ The tool computes the previous working day, so Monday morning produces Friday's 
 
 Edit [project/config.md](project/config.md). The summary tool reads the fenced JSON block in that file.
 
-Keep tokens and webhook URLs out of Git. Use `.trackalo/plugins.json`, environment variables, or another local secret store.
+Keep tokens and webhook URLs out of Git. Use `.pulseboard/plugins.json`, environment variables, or another local secret store.
