@@ -1,6 +1,6 @@
-# Command: build-graph
+# Internal Procedure: Graph
 
-Use when project topology changes or before sharing the graph view.
+Use automatically when project topology changes. This is an internal maintenance procedure, not a normal user-facing command.
 
 ## Inputs
 

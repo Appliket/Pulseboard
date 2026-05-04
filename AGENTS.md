@@ -112,24 +112,25 @@ Tasks must include request, scope, affected areas, category/priority reasoning, 
 
 ## Command Rules
 
-- There is no CLI to run. A user invokes commands by asking the agent, for example `add "request text"` or `update [[task-id]] to in-progress`.
-- For `configure`, follow `commands/configure.md`.
-- For `add`, follow `commands/add.md`.
-- For `check`, follow `commands/check.md`.
-- For `update`, follow `commands/update.md`.
-- For graph rebuilds, follow `commands/build-graph.md`.
-- For background context capture or synthesis, follow `commands/ingest-info.md`.
+- There is no CLI to run. A user invokes commands by asking the agent, for example `Add "request text"` or `Update [[task-id]] to in-progress`.
+- For `Configure`, follow `commands/Configure.md`.
+- For `Add`, follow `commands/Add.md`.
+- For `Check`, follow `commands/Check.md`.
+- For `Update`, follow `commands/Update.md`.
+- For `Injest`, follow `commands/Injest.md`.
+- Graph maintenance is automatic after any command that changes project topology. Follow `commands/Graph.md` internally; users should not need to run a separate graph command.
 - When the user asks for a dry run or preview, describe planned file changes and do not edit files.
-- Run the `check` procedure after configuration and task changes.
+- Run the `Check` procedure after configuration and task changes.
 - Keep command output concise and actionable.
 
 ## Graph Rules
 
-- `graph/graph.json` is generated from markdown links, task dependencies, components, repositories, areas, sources, and status.
+- `graph/graph.json` is generated automatically from markdown links, task dependencies, components, repositories, areas, sources, and status.
 - `graph/graph.html` is a lightweight local viewer.
 - Generated graph artifacts may be rebuilt at any time.
 - Do not treat generated graph files as source of truth.
 - Graph JSON must be deterministic: sort nodes by `id` and edges by `source`, `target`, then `type`.
+- Any command that creates, updates, deletes, moves, links, relinks, or changes status of a project node must update graph artifacts in the same change.
 
 ## Check Rules
 

@@ -1,6 +1,6 @@
-# Command: check
+# Command: Check
 
-Use after every configuration, add, update, split, merge, or graph change.
+Use after every Configure, Add, Update, Injest, split, merge, or graph-affecting change.
 
 ## Inputs
 
@@ -56,9 +56,10 @@ Use after every configuration, add, update, split, merge, or graph change.
 21. Detect `done` tasks without validation evidence.
 22. Detect stale wikilinks or missing linked files.
 23. Detect architecture mismatch, such as frontend work implying backend/API work but lacking backend/API links.
-24. Validate graph artifacts reflect current tasks, states, dependencies, components, repositories, areas, sources, and info pages.
-25. Write a concise report under `project/checks/YYYY-MM-DD-check.md`.
-26. Add the latest check summary to affected tasks under `## Check Result`.
+24. If graph artifacts are stale, update them automatically by following `commands/Graph.md`.
+25. Validate graph artifacts reflect current tasks, states, dependencies, components, repositories, areas, sources, and info pages.
+26. Write a concise report under `project/checks/YYYY-MM-DD-check.md`.
+27. Add the latest check summary to affected tasks under `## Check Result`.
 
 ## Report Format
 

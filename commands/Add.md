@@ -1,4 +1,4 @@
-# Command: add
+# Command: Add
 
 Use when the user describes a new client, product, engineering, or project-management request.
 
@@ -31,8 +31,8 @@ Use when the user describes a new client, product, engineering, or project-manag
     - `in-review` -> `## In Review`
     - `done` -> `## Done`
 17. Update `project/index.md` if a new important info, feature, component, decision, or risk page is created.
-18. Update `graph/graph.json` and `graph/graph.html` if topology changes.
-19. Run the `check` command procedure.
+18. Automatically update `graph/graph.json` and `graph/graph.html` if topology changes by following `commands/Graph.md`.
+19. Run the `Check` command procedure.
 20. Append a concise entry to `project/log.md`.
 
 ## Task Template

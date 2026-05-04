@@ -1,4 +1,4 @@
-# Command: configure
+# Command: Configure
 
 Use when the user provides project taxonomy, repository references, examples, or asks to bootstrap conventions from GitHub.
 
@@ -28,8 +28,9 @@ Use when the user provides project taxonomy, repository references, examples, or
 9. If code/docs/info reveal likely areas, components, repository mappings, category examples, or priority examples, record them as inferred suggestions unless user confirms them.
 10. Never write secrets, tokens, cookies, private URLs with embedded credentials, or auth headers.
 11. Update the frontmatter `updated` date.
-12. Run the `check` command procedure.
-13. Append a concise entry to `project/log.md`.
+12. Automatically update graph artifacts by following `commands/Graph.md` if repository, area, category, priority, or info topology changed.
+13. Run the `Check` command procedure.
+14. Append a concise entry to `project/log.md`.
 
 ## GitHub Bootstrap Rules
 

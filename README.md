@@ -11,23 +11,24 @@ Open this folder with an LLM coding agent and ask it to follow [AGENTS.md](AGENT
 Example agent commands:
 
 ```text
-configure this wiki for my app: categories feature, bug, chore; priorities p0-p3; repo owner/example-web at ../example-web
-add "Add Google login to onboarding"
-update [[add-google-login-onboarding]] to in-progress
-check the project wiki
-rebuild the graph
+Configure this wiki for my app: categories feature, bug, chore; priorities p0-p3; repo owner/example-web at ../example-web
+Add "Add Google login to onboarding"
+Update [[add-google-login-onboarding]] to in-progress
+Check the project wiki
+Injest these architecture notes into project info: ...
 ```
 
 Open `project/board.md` in Obsidian with the Kanban plugin enabled to see the human status board.
 
 ## Commands
 
-- `configure`: follow [commands/configure.md](commands/configure.md).
-- `add`: follow [commands/add.md](commands/add.md).
-- `check`: follow [commands/check.md](commands/check.md).
-- `update`: follow [commands/update.md](commands/update.md).
-- `build-graph`: follow [commands/build-graph.md](commands/build-graph.md).
-- `ingest-info`: follow [commands/ingest-info.md](commands/ingest-info.md).
+- `Configure`: follow [commands/Configure.md](commands/Configure.md).
+- `Add`: follow [commands/Add.md](commands/Add.md).
+- `Check`: follow [commands/Check.md](commands/Check.md).
+- `Update`: follow [commands/Update.md](commands/Update.md).
+- `Injest`: follow [commands/Injest.md](commands/Injest.md).
+
+Graph artifacts are maintained automatically by the agent whenever project topology changes; there is no separate user-facing graph command.
 
 Ask for a dry run or preview when you want planned file changes without edits.
 

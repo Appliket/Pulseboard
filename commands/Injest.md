@@ -1,4 +1,4 @@
-# Command: ingest-info
+# Command: Injest
 
 Use when the user provides background documents, architecture notes, repository summaries, meeting notes, product docs, code observations, links, screenshots, or any material that should help infer task metadata later.
 
@@ -34,8 +34,8 @@ Use when the user provides background documents, architecture notes, repository 
    - open questions
 6. Link related tasks, features, components, decisions, risks, or checks with wikilinks.
 7. Update `project/info/index.md`.
-8. Update graph artifacts if topology changes.
-9. Run the `check` command procedure if the new info changes task interpretation.
+8. Automatically update graph artifacts by following `commands/Graph.md` if topology changes.
+9. Run the `Check` command procedure if the new info changes task interpretation.
 10. Append a concise entry to `project/log.md`.
 
 ## Info Page Template
@@ -86,4 +86,3 @@ Maintained context that helps infer project work.
 - New or updated `project/info/` page.
 - Updated graph artifacts when topology changes.
 - Optional check report.
-

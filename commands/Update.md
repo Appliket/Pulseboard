@@ -1,4 +1,4 @@
-# Command: update
+# Command: Update
 
 Use when the user changes task state, scope, category, priority, repository references, dependencies, implementation notes, review outcome, or acceptance criteria.
 
@@ -6,6 +6,7 @@ Use when the user changes task state, scope, category, priority, repository refe
 
 - Task id or path.
 - Requested change.
+- Optional code, docs, review, issue, or implementation evidence.
 - Optional state:
   - `todo`
   - `in-progress`
@@ -29,8 +30,8 @@ Use when the user changes task state, scope, category, priority, repository refe
 9. Split the task if evidence shows scope is too broad.
 10. Merge duplicates only when the request clearly authorizes consolidation or the duplicate is unambiguous from evidence.
 11. Add follow-up tasks when review/check/code inspection exposes missing work.
-12. Update graph artifacts when dependencies, components, repositories, areas, sources, or states change.
-13. Run the `check` command procedure.
+12. Automatically update graph artifacts by following `commands/Graph.md` when dependencies, components, repositories, areas, sources, or states change.
+13. Run the `Check` command procedure.
 14. Append a concise entry to `project/log.md`.
 
 ## Output
@@ -39,4 +40,3 @@ Use when the user changes task state, scope, category, priority, repository refe
 - Updated board.
 - Updated graph artifacts when topology changes.
 - Check report.
- - Optional code, docs, review, issue, or implementation evidence.
