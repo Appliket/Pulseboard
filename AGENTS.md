@@ -25,6 +25,7 @@ The core product is intentionally small:
 - `project/log.md` stores maintained project history.
 - `plugins/` stores outbound posting integrations.
 - `.codex/config.toml` stores the project-local Codex startup hook.
+- `tools/agent-startup-summary.js` is the generic startup entrypoint for any agent or scheduler.
 - `tools/` stores small local scripts.
 - `tests/` stores script tests.
 
@@ -32,7 +33,7 @@ The core product is intentionally small:
 
 - Default target day is the previous working day.
 - Monday summarizes Friday unless configuration changes working days.
-- Codex startup automation must be idempotent and post at most once per target day.
+- Agent startup automation must be idempotent and post at most once per target day.
 - Summaries must only use configured local repositories, configured docs paths, and `raw/activities/`.
 - Do not invent activity. If no activity is found, say so.
 - Generated summaries may be rebuilt.
@@ -61,6 +62,7 @@ The core product is intentionally small:
 - Prefer Node standard library for the summary tool.
 - Do not add a long-running bot process unless the user explicitly changes the product direction again.
 - Do not add API-key or OAuth model access for the core digest.
+- Agent-specific integrations should call `npm run agent-start` or `node tools/agent-startup-summary.js`; do not fork core digest behavior per agent.
 
 ## Check Rules
 

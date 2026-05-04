@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { isMorning } = require("../tools/codex-startup-summary");
+const { isMorning } = require("../tools/agent-startup-summary");
 
 assert.equal(isMorning(new Date(2026, 4, 4, 5), {}), false);
 assert.equal(isMorning(new Date(2026, 4, 4, 6), {}), true);

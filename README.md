@@ -32,7 +32,7 @@ Generated summaries are written locally to `project/summaries/YYYY-MM-DD.md`. Ge
 
 ## Automatic Codex Startup
 
-This template includes a project-local Codex hook in [.codex/config.toml](.codex/config.toml). When you open Codex in a trusted project created from this template, the hook runs `tools/codex-startup-summary.js` in the background.
+This template includes a project-local Codex hook in [.codex/config.toml](.codex/config.toml). When you open Codex in a trusted project created from this template, the hook runs `tools/agent-startup-summary.js` in the background through a Codex compatibility wrapper.
 
 The startup script:
 
@@ -50,6 +50,24 @@ cp plugins.example.json .trackalo/plugins.json
 ```
 
 Then edit `.trackalo/plugins.json`. That file is ignored by Git.
+
+## Other Agents
+
+The digest does not depend on Codex. Any agent, editor, or automation tool can run the same idempotent startup command:
+
+```bash
+npm run agent-start
+```
+
+Agent integration contract:
+
+- Run `npm run agent-start` when the agent opens or attaches to the project.
+- It is safe to call multiple times; it posts at most once per target day.
+- It exits quietly outside the morning window.
+- It uses `.trackalo/plugins.json` for local plugin credentials.
+- It writes generated summaries under `project/summaries/`.
+
+For agents that support project startup hooks, configure that hook to run `npm run agent-start`. For agents without hooks, use cron/launchd or a shell alias that opens the agent and then runs the command.
 
 ## What It Reads
 
@@ -92,7 +110,7 @@ Plugin setup notes live in:
 
 ## Scheduling
 
-Codex startup is the default lightweight automation path. Use cron, launchd, GitHub Actions on a trusted runner, or any existing scheduler only if you want automation independent of opening Codex. Example weekday cron at 09:00:
+Agent startup is the default lightweight automation path. Use cron, launchd, GitHub Actions on a trusted runner, or any existing scheduler only if you want automation independent of opening an agent. Example weekday cron at 09:00:
 
 ```cron
 0 9 * * 1-5 cd /path/to/project && npm run summary -- --post all
