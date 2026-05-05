@@ -146,13 +146,13 @@ Planning/coherence tasks should usually remain local. Do not use GitHub as the c
 Manual Slack post:
 
 ```bash
-SLACK_WEBHOOK_URL="https://hooks.slack.com/..." npm run summary -- --post slack
+npm run summary -- --post slack
 ```
 
 Manual Telegram post:
 
 ```bash
-TELEGRAM_BOT_TOKEN="..." TELEGRAM_CHAT_ID="..." npm run summary -- --post telegram
+npm run summary -- --post telegram
 ```
 
 Post to every locally configured plugin:

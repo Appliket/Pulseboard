@@ -1,13 +1,13 @@
 {
   "auto_on_agent_start": true,
   "auto_on_codex_start": true,
-  "enabled": ["slack"],
+  "enabled": [],
   "morning_window": {
     "start_hour": 6,
     "end_hour": 12
   },
   "slack": {
-    "webhook_url": "https://hooks.slack.com/services/REPLACE/ME"
+    "webhook_url": "REPLACE_ME"
   },
   "telegram": {
     "bot_token": "REPLACE_ME",
