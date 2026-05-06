@@ -3,6 +3,9 @@ const fs = require("fs");
 const http = require("http");
 const path = require("path");
 const { execFileSync } = require("child_process");
+const { McpServer } = require("@modelcontextprotocol/sdk/server/mcp.js");
+const { StreamableHTTPServerTransport } = require("@modelcontextprotocol/sdk/server/streamableHttp.js");
+const z = require("zod/v4");
 
 const ROOT = path.resolve(__dirname, "..");
 const DEFAULT_CONFIG = "project/config.md";
@@ -18,6 +21,12 @@ function parseArgs(argv) {
     transport: "stdio",
     host: process.env.HOST || process.env.PULSEBOARD_MCP_HOST || "127.0.0.1",
     port: Number(process.env.PORT || process.env.PULSEBOARD_MCP_PORT || 8787),
+    enableWrites: process.env.PULSEBOARD_ENABLE_WRITE_TOOLS === "1",
+    allowNoAuthWrites: process.env.PULSEBOARD_ALLOW_NOAUTH_WRITES === "1",
+    publicUrl: process.env.PULSEBOARD_PUBLIC_URL || "",
+    oauthIssuer: process.env.PULSEBOARD_OAUTH_ISSUER || "",
+    oauthAudience: process.env.PULSEBOARD_OAUTH_AUDIENCE || process.env.PULSEBOARD_PUBLIC_URL || "",
+    oauthJwksUrl: process.env.PULSEBOARD_OAUTH_JWKS_URL || "",
   };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
@@ -30,6 +39,12 @@ function parseArgs(argv) {
     else if (arg === "--stdio") options.transport = "stdio";
     else if (arg === "--host") options.host = argv[++index];
     else if (arg === "--port") options.port = Number(argv[++index]);
+    else if (arg === "--enable-writes") options.enableWrites = true;
+    else if (arg === "--allow-noauth-writes") options.allowNoAuthWrites = true;
+    else if (arg === "--public-url") options.publicUrl = argv[++index];
+    else if (arg === "--oauth-issuer") options.oauthIssuer = argv[++index];
+    else if (arg === "--oauth-audience") options.oauthAudience = argv[++index];
+    else if (arg === "--oauth-jwks-url") options.oauthJwksUrl = argv[++index];
     else if (arg === "--help" || arg === "-h") options.help = true;
     else throw new Error(`Unknown argument: ${arg}`);
   }
@@ -51,6 +66,12 @@ function usage() {
     "  PULSEBOARD_STORAGE=local|github",
     "  PULSEBOARD_GITHUB_REPO=owner/repo",
     "  PULSEBOARD_GITHUB_REF=main",
+    "  PULSEBOARD_ENABLE_WRITE_TOOLS=1",
+    "  PULSEBOARD_ALLOW_NOAUTH_WRITES=1",
+    "  PULSEBOARD_PUBLIC_URL=https://pulseboard.example.com",
+    "  PULSEBOARD_OAUTH_ISSUER=https://auth.example.com",
+    "  PULSEBOARD_OAUTH_AUDIENCE=https://pulseboard.example.com",
+    "  PULSEBOARD_OAUTH_JWKS_URL=https://auth.example.com/.well-known/jwks.json",
     "  GITHUB_TOKEN or GH_TOKEN   Required for private GitHub repos and PR writes.",
   ].join("\n");
 }
@@ -710,21 +731,25 @@ const tools = [
   {
     name: "list_tasks",
     description: "List Pulseboard task records with status, category, priority, and path.",
+    annotations: { title: "List Tasks", readOnlyHint: true, openWorldHint: false },
     inputSchema: { type: "object", properties: {} },
   },
   {
     name: "get_board",
     description: "Return Obsidian Kanban board lanes and task cards.",
+    annotations: { title: "Get Board", readOnlyHint: true, openWorldHint: false },
     inputSchema: { type: "object", properties: {} },
   },
   {
     name: "check",
     description: "Validate task-board coherence plus knowledge-base lint warnings.",
+    annotations: { title: "Check Pulseboard", readOnlyHint: true, openWorldHint: false },
     inputSchema: { type: "object", properties: {} },
   },
   {
     name: "search",
     description: "Search the configured Pulseboard wiki and raw knowledge sources.",
+    annotations: { title: "Search Pulseboard", readOnlyHint: true, openWorldHint: false },
     inputSchema: {
       type: "object",
       properties: {
@@ -737,6 +762,7 @@ const tools = [
   {
     name: "fetch",
     description: "Fetch a Pulseboard document by id/path.",
+    annotations: { title: "Fetch Document", readOnlyHint: true, openWorldHint: false },
     inputSchema: {
       type: "object",
       properties: { id: { type: "string" } },
@@ -746,6 +772,7 @@ const tools = [
   {
     name: "query",
     description: "Answer a question with source-backed Pulseboard evidence and gaps.",
+    annotations: { title: "Query Pulseboard", readOnlyHint: true, openWorldHint: false },
     inputSchema: {
       type: "object",
       properties: {
@@ -758,11 +785,13 @@ const tools = [
   {
     name: "lint",
     description: "Check Pulseboard wiki hygiene, source references, and broken wikilinks.",
+    annotations: { title: "Lint Pulseboard", readOnlyHint: true, openWorldHint: false },
     inputSchema: { type: "object", properties: {} },
   },
   {
     name: "create_ingest_pr",
     description: "Create a GitHub branch and pull request that appends raw source material and optional synthesis.",
+    annotations: { title: "Create Ingest PR", readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -781,6 +810,7 @@ const tools = [
   {
     name: "create_task_pr",
     description: "Create a GitHub pull request adding a Pulseboard task, raw request note, board card, and log entry.",
+    annotations: { title: "Create Task PR", readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -803,6 +833,7 @@ const tools = [
   {
     name: "update_task_pr",
     description: "Create a GitHub pull request updating a task status and moving its board card.",
+    annotations: { title: "Update Task PR", readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -816,7 +847,25 @@ const tools = [
   },
 ];
 
+function isWriteTool(name) {
+  return ["create_ingest_pr", "create_task_pr", "update_task_pr"].includes(name);
+}
+
+function activeTools(options = {}) {
+  return tools.filter((tool) => !isWriteTool(tool.name)
+    || (options.enableWrites && (options.oauthIssuer || options.allowNoAuthWrites)));
+}
+
 function callTool(name, input = {}, options = {}) {
+  if (isWriteTool(name) && !options.enableWrites) {
+    throw new Error(`${name} is disabled. Set PULSEBOARD_ENABLE_WRITE_TOOLS=1 or pass --enable-writes to advertise and run write tools.`);
+  }
+  if (isWriteTool(name) && !options.oauthIssuer && !options.allowNoAuthWrites) {
+    throw new Error(`${name} requires OAuth. Set PULSEBOARD_OAUTH_ISSUER or use PULSEBOARD_ALLOW_NOAUTH_WRITES=1 for local development.`);
+  }
+  if (isWriteTool(name) && options.oauthIssuer && !options.authenticated) {
+    throw new Error(`${name} requires OAuth authentication.`);
+  }
   if (name === "list_tasks") return listTasks(options);
   if (name === "get_board") return boardPulseboard(options);
   if (name === "check") return checkPulseboard(options);
@@ -828,6 +877,118 @@ function callTool(name, input = {}, options = {}) {
   if (name === "create_task_pr") return createTaskPr(input, options);
   if (name === "update_task_pr") return updateTaskPr(input, options);
   throw new Error(`Unknown tool: ${name}`);
+}
+
+function toolInputSchema(name) {
+  if (name === "search") return {
+    query: z.string().describe("Natural language or keyword search query."),
+    limit: z.number().optional().describe("Maximum number of results."),
+  };
+  if (name === "fetch") return {
+    id: z.string().describe("Pulseboard document id or path, for example project/info/knowledge-base.md."),
+  };
+  if (name === "query") return {
+    question: z.string().describe("Question to answer from the Pulseboard wiki and raw evidence."),
+    limit: z.number().optional().describe("Maximum number of cited evidence results."),
+  };
+  if (name === "create_ingest_pr") return {
+    source_type: z.enum(["activity", "info", "meeting", "request", "spec"]).optional().describe("Kind of raw source material to append."),
+    topic: z.string().describe("Short topic used for filenames and PR title."),
+    text: z.string().describe("Original source material to preserve in raw/."),
+    synthesis: z.string().optional().describe("Optional maintained synthesis page content for project/info/."),
+    date: z.string().optional().describe("YYYY-MM-DD source date. Defaults to today."),
+    title: z.string().optional().describe("Pull request title."),
+    body: z.string().optional().describe("Pull request body."),
+    branch: z.string().optional().describe("Optional branch name."),
+  };
+  if (name === "create_task_pr") return {
+    id: z.string().optional().describe("Optional deterministic task id. Defaults from title/request."),
+    title: z.string().describe("Task title."),
+    request: z.string().optional().describe("Original natural-language request."),
+    scope: z.string().optional().describe("Task scope."),
+    status: z.enum(["todo", "in-progress", "in-review", "done"]).optional().describe("Initial task status."),
+    category: z.string().optional().describe("Task category."),
+    priority: z.string().optional().describe("Task priority."),
+    areas: z.array(z.string()).optional().describe("Affected project areas."),
+    acceptance_criteria: z.array(z.string()).optional().describe("Acceptance criteria checklist items."),
+    evidence: z.string().optional().describe("Evidence links or source notes."),
+    notes: z.string().optional().describe("Implementation notes."),
+    branch: z.string().optional().describe("Optional branch name."),
+  };
+  if (name === "update_task_pr") return {
+    id: z.string().describe("Task id without path or extension."),
+    status: z.enum(["todo", "in-progress", "in-review", "done"]).describe("New task status."),
+    note: z.string().optional().describe("Optional update note appended to the task."),
+    branch: z.string().optional().describe("Optional branch name."),
+  };
+  return {};
+}
+
+function toolSecuritySchemes(tool, options = {}) {
+  if (!isWriteTool(tool.name)) return [{ type: "noauth" }];
+  if (options.oauthIssuer) return [{ type: "oauth2", scopes: ["pulseboard.write"] }];
+  if (options.allowNoAuthWrites) return [{ type: "noauth" }];
+  return [{ type: "oauth2", scopes: ["pulseboard.write"] }];
+}
+
+function authChallenge(options = {}) {
+  const resource = (options.publicUrl || `http://${options.host}:${options.port}`).replace(/\/$/, "");
+  return `Bearer resource_metadata="${resource}/.well-known/oauth-protected-resource", error="insufficient_scope", error_description="Pulseboard write tools require OAuth"`;
+}
+
+function mcpAuthRequired(options = {}) {
+  return {
+    content: [{
+      type: "text",
+      text: "Authentication required: Pulseboard write tools require OAuth.",
+    }],
+    _meta: {
+      "mcp/www_authenticate": [authChallenge(options)],
+    },
+    isError: true,
+  };
+}
+
+async function verifyOAuthRequest(request, options = {}) {
+  if (!options.oauthIssuer) return { authenticated: false };
+  const header = request.headers.authorization || "";
+  const match = String(header).match(/^Bearer\s+(.+)$/i);
+  if (!match) return { authenticated: false };
+  const issuer = options.oauthIssuer.replace(/\/$/, "");
+  const jwksUrl = options.oauthJwksUrl || `${issuer}/.well-known/jwks.json`;
+  const audience = options.oauthAudience || options.publicUrl || `http://${options.host}:${options.port}`;
+  const { createRemoteJWKSet, jwtVerify } = await import("jose");
+  const jwks = createRemoteJWKSet(new URL(jwksUrl));
+  const result = await jwtVerify(match[1], jwks, { issuer, audience });
+  return {
+    authenticated: true,
+    subject: result.payload.sub || "",
+    scopes: String(result.payload.scope || "").split(/\s+/).filter(Boolean),
+  };
+}
+
+function createMcpServer(options = {}) {
+  const server = new McpServer({
+    name: "pulseboard",
+    version: "0.3.0",
+  });
+  for (const tool of activeTools(options)) {
+    server.registerTool(tool.name, {
+      title: tool.annotations && tool.annotations.title,
+      description: tool.description,
+      inputSchema: toolInputSchema(tool.name),
+      annotations: tool.annotations,
+      _meta: {
+        securitySchemes: toolSecuritySchemes(tool, options),
+      },
+    }, async (input) => {
+      if (isWriteTool(tool.name) && options.oauthIssuer && !options.authenticated) {
+        return mcpAuthRequired(options);
+      }
+      return mcpContent(callTool(tool.name, input || {}, options));
+    });
+  }
+  return server;
 }
 
 function mcpContent(value) {
@@ -852,7 +1013,7 @@ function handleMcpMessage(message, options) {
     };
   }
   if (message.method === "tools/list") {
-    return { jsonrpc: "2.0", id: message.id, result: { tools } };
+    return { jsonrpc: "2.0", id: message.id, result: { tools: activeTools(options) } };
   }
   if (message.method === "tools/call") {
     const params = message.params || {};
@@ -908,11 +1069,66 @@ function sendJson(response, status, value) {
   response.end(text);
 }
 
+async function handleSdkMcpRequest(request, response, body, options) {
+  let auth = { authenticated: false };
+  try {
+    auth = await verifyOAuthRequest(request, options);
+  } catch (error) {
+    console.error(`OAuth verification failed: ${error.message}`);
+    auth = { authenticated: false };
+  }
+  const server = createMcpServer({ ...options, ...auth });
+  const transport = new StreamableHTTPServerTransport({
+    sessionIdGenerator: undefined,
+  });
+  try {
+    await server.connect(transport);
+    await transport.handleRequest(request, response, body);
+  } finally {
+    response.on("close", () => {
+      transport.close();
+      server.close();
+    });
+  }
+}
+
+function protectedResourceMetadata(options) {
+  const resource = options.publicUrl || `http://${options.host}:${options.port}`;
+  return {
+    resource,
+    authorization_servers: options.oauthIssuer ? [options.oauthIssuer] : [],
+    scopes_supported: ["pulseboard.read", "pulseboard.write"],
+    resource_documentation: `${resource.replace(/\/$/, "")}/docs`,
+  };
+}
+
+function appMetadata(options) {
+  return {
+    name: "Pulseboard",
+    description: "Source-backed markdown project wiki, task board, and knowledge base stored locally or in GitHub.",
+    mcp_endpoint: `${(options.publicUrl || `http://${options.host}:${options.port}`).replace(/\/$/, "")}/mcp`,
+    storage: options.mode,
+    repo: options.repo || "",
+    write_tools_enabled: activeTools(options).some((tool) => isWriteTool(tool.name)),
+    tools: activeTools(options).map((tool) => ({
+      name: tool.name,
+      description: tool.description,
+      annotations: tool.annotations,
+      securitySchemes: toolSecuritySchemes(tool, options),
+    })),
+  };
+}
+
 function startHttp(options) {
   const server = http.createServer((request, response) => {
     const url = new URL(request.url, `http://${request.headers.host}`);
     if (request.method === "GET" && url.pathname === "/health") return sendJson(response, 200, { ok: true });
-    if (request.method === "GET" && url.pathname === "/tools") return sendJson(response, 200, { tools });
+    if (request.method === "GET" && url.pathname === "/tools") return sendJson(response, 200, { tools: activeTools(options) });
+    if (request.method === "GET" && url.pathname === "/manifest.json") return sendJson(response, 200, appMetadata(options));
+    if (request.method === "GET" && url.pathname === "/docs") return sendJson(response, 200, appMetadata(options));
+    if (request.method === "GET" && url.pathname === "/.well-known/oauth-protected-resource") {
+      return sendJson(response, 200, protectedResourceMetadata(options));
+    }
     if (request.method === "POST" && url.pathname.startsWith("/tools/")) {
       return readRequestBody(request, (body) => {
         const name = decodeURIComponent(url.pathname.slice("/tools/".length));
@@ -925,10 +1141,28 @@ function startHttp(options) {
     }
     if (request.method === "POST" && url.pathname === "/mcp") {
       return readRequestBody(request, (body) => {
-        sendJson(response, 200, handleMcpMessage(body, options));
+        handleSdkMcpRequest(request, response, body, options).catch((error) => {
+          console.error(`MCP request failed: ${error.message}`);
+          if (!response.headersSent) {
+            sendJson(response, 500, {
+              jsonrpc: "2.0",
+              error: { code: -32603, message: "Internal server error" },
+              id: null,
+            });
+          }
+        });
       });
     }
+    if (request.method === "GET" && url.pathname === "/mcp") {
+      response.writeHead(405, { allow: "POST", "content-type": "application/json; charset=utf-8" });
+      response.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32000, message: "Method not allowed." }, id: null }));
+      return undefined;
+    }
     return sendJson(response, 404, { error: "Not found" });
+  });
+  server.on("error", (error) => {
+    console.error(`Pulseboard MCP HTTP adapter failed: ${error.message}`);
+    process.exitCode = 1;
   });
   server.listen(options.port, options.host, () => {
     console.error(`Pulseboard MCP HTTP adapter listening on http://${options.host}:${options.port}`);
@@ -955,6 +1189,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  activeTools,
   callTool,
   boardPulseboard,
   checkPulseboard,

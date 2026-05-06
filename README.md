@@ -140,6 +140,12 @@ Run HTTP development mode:
 npm run mcp:http
 ```
 
+The ChatGPT connector URL is:
+
+```text
+https://your-public-host.example.com/mcp
+```
+
 Run against a GitHub repository:
 
 ```bash
@@ -150,7 +156,7 @@ GITHUB_TOKEN=... \
 npm run mcp:http
 ```
 
-The adapter exposes knowledge tools (`search`, `fetch`, `query`, `lint`), project-management tools (`list_tasks`, `get_board`, `check`), and reviewed write tools (`create_ingest_pr`, `create_task_pr`, `update_task_pr`). The write path uses branch-and-PR review, so GitHub can be the canonical storage and audit layer without letting ChatGPT write directly to `main`.
+The adapter exposes knowledge tools (`search`, `fetch`, `query`, `lint`) and project-management tools (`list_tasks`, `get_board`, `check`) by default. Reviewed write tools (`create_ingest_pr`, `create_task_pr`, `update_task_pr`) are advertised only when `PULSEBOARD_ENABLE_WRITE_TOOLS=1` and OAuth is configured, unless `PULSEBOARD_ALLOW_NOAUTH_WRITES=1` is set for local development. The write path uses branch-and-PR review, so GitHub can be the canonical storage and audit layer without letting ChatGPT write directly to `main`.
 
 See [plugins/chatgpt-mcp/README.md](plugins/chatgpt-mcp/README.md).
 

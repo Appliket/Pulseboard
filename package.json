@@ -2,7 +2,7 @@
   "name": "pulseboard-template",
   "version": "0.2.0",
   "private": true,
-  "description": "Local activity digests with optional channel posting plugins.",
+  "description": "Local-first project wiki, task board, knowledge base, daily digest, and ChatGPT MCP adapter.",
   "type": "commonjs",
   "scripts": {
     "init": "node tools/init-template.js",
@@ -14,5 +14,12 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^3.25.76"
+  },
+  "overrides": {
+    "ip-address": "10.2.0"
   }
 }

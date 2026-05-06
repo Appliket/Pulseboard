@@ -56,6 +56,10 @@ assert.match(readme, /Lint/);
 
 const chatgptMcp = read("plugins/chatgpt-mcp/README.md");
 assert.match(chatgptMcp, /GitHub-backed mode/);
+assert.match(chatgptMcp, /Streamable HTTP/);
+assert.match(chatgptMcp, /PULSEBOARD_ENABLE_WRITE_TOOLS=1/);
+assert.match(chatgptMcp, /PULSEBOARD_ALLOW_NOAUTH_WRITES=1/);
+assert.match(chatgptMcp, /verifies bearer JWTs/);
 assert.match(chatgptMcp, /create_ingest_pr/);
 assert.match(chatgptMcp, /create_task_pr/);
 assert.match(chatgptMcp, /update_task_pr/);

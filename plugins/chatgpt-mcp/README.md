@@ -17,7 +17,7 @@ Local filesystem mode:
 npm run mcp
 ```
 
-HTTP development mode:
+Streamable HTTP development mode:
 
 ```bash
 npm run mcp:http
@@ -34,7 +34,21 @@ GITHUB_TOKEN=... \
 npm run mcp:http
 ```
 
-`GITHUB_TOKEN` or `GH_TOKEN` is required for private repositories and for `create_ingest_pr`.
+`GITHUB_TOKEN` or `GH_TOKEN` is required for private repositories and for write tools.
+
+Write tools are hidden by default. Enable them explicitly:
+
+```bash
+PULSEBOARD_ENABLE_WRITE_TOOLS=1 npm run mcp:http
+```
+
+For local development only, write tools can be advertised without OAuth:
+
+```bash
+PULSEBOARD_ENABLE_WRITE_TOOLS=1 \
+PULSEBOARD_ALLOW_NOAUTH_WRITES=1 \
+npm run mcp:http
+```
 
 ## Tools
 
@@ -45,12 +59,36 @@ npm run mcp:http
 - `list_tasks`: list project task records.
 - `get_board`: return Obsidian Kanban lanes and cards.
 - `check`: validate task-board coherence plus knowledge-base lint warnings.
-- `create_ingest_pr`: create a GitHub branch and pull request with a new append-only raw source file and optional synthesis page.
-- `create_task_pr`: create a branch and pull request adding a task, raw request note, board card, and log entry.
-- `update_task_pr`: create a branch and pull request updating task status and moving the board card.
+- `create_ingest_pr`: create a GitHub branch and pull request with a new append-only raw source file and optional synthesis page. Hidden unless writes are enabled.
+- `create_task_pr`: create a branch and pull request adding a task, raw request note, board card, and log entry. Hidden unless writes are enabled.
+- `update_task_pr`: create a branch and pull request updating task status and moving the board card. Hidden unless writes are enabled.
 
 ## ChatGPT App Path
 
-The core Pulseboard logic is dependency-free and can run as stdio MCP for local agents or as HTTP JSON for deployment testing.
+The server exposes a Streamable HTTP MCP endpoint at `/mcp`. In ChatGPT Developer Mode, create a connector with:
 
-For a production ChatGPT app, run this behind a remote MCP transport that ChatGPT can connect to, or wrap these exported tool handlers with the official Apps SDK/MCP server framework. Keep write tools behind review: `create_ingest_pr`, `create_task_pr`, and `update_task_pr` open pull requests instead of committing directly to `main`.
+```text
+https://your-public-host.example.com/mcp
+```
+
+For local development, expose `npm run mcp:http` through ngrok or Cloudflare Tunnel and use the tunnel `/mcp` URL.
+
+The server also exposes:
+
+- `/health`: health check.
+- `/tools`: debug view of advertised tools.
+- `/manifest.json`: deployment metadata.
+- `/.well-known/oauth-protected-resource`: OAuth resource metadata scaffold.
+
+## Authentication
+
+Read-only public-repo use can run without OAuth. Anything that exposes private repositories or write tools should be deployed behind proper OAuth 2.1 for MCP. Set:
+
+```bash
+PULSEBOARD_PUBLIC_URL=https://your-public-host.example.com
+PULSEBOARD_OAUTH_ISSUER=https://auth.example.com
+PULSEBOARD_OAUTH_AUDIENCE=https://your-public-host.example.com
+PULSEBOARD_OAUTH_JWKS_URL=https://auth.example.com/.well-known/jwks.json
+```
+
+The adapter publishes protected-resource metadata and verifies bearer JWTs against the configured issuer/JWKS before running write tools. The OAuth issuer itself should be provided by an identity provider such as Auth0, Okta, Cognito, or Stytch. Keep write tools behind review: `create_ingest_pr`, `create_task_pr`, and `update_task_pr` open pull requests instead of committing directly to `main`.

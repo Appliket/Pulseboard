@@ -1,5 +1,6 @@
 const assert = require("node:assert/strict");
 const {
+  activeTools,
   boardPulseboard,
   callTool,
   checkPulseboard,
@@ -23,6 +24,10 @@ assert.ok(tools.find((tool) => tool.name === "check"));
 assert.ok(tools.find((tool) => tool.name === "create_ingest_pr"));
 assert.ok(tools.find((tool) => tool.name === "create_task_pr"));
 assert.ok(tools.find((tool) => tool.name === "update_task_pr"));
+assert.equal(activeTools(options).some((tool) => tool.name === "create_task_pr"), false);
+assert.equal(activeTools({ ...options, enableWrites: true }).some((tool) => tool.name === "create_task_pr"), false);
+assert.equal(activeTools({ ...options, enableWrites: true, allowNoAuthWrites: true }).some((tool) => tool.name === "create_task_pr"), true);
+assert.equal(activeTools({ ...options, enableWrites: true, oauthIssuer: "https://auth.example.com" }).some((tool) => tool.name === "create_task_pr"), true);
 
 const search = searchPulseboard("knowledge base query evidence", options);
 assert.ok(search.results.length > 0);
@@ -55,5 +60,10 @@ assert.ok(Array.isArray(check.missing_cards));
 
 const called = callTool("search", { query: "Injest customer calls", limit: 3 }, options);
 assert.ok(called.results.length <= 3);
+
+assert.throws(
+  () => callTool("create_task_pr", { title: "Test task" }, options),
+  /disabled/,
+);
 
 console.log("pulseboard mcp tests passed");
