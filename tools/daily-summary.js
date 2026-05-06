@@ -244,31 +244,45 @@ function renderPostText(summary) {
   ].join("\n");
 }
 
-async function postSlack(text, settings = readLocalSettings()) {
-  const url = process.env.SLACK_WEBHOOK_URL || (settings.slack && settings.slack.webhook_url);
-  if (!url) throw new Error("Slack webhook is not configured. Set SLACK_WEBHOOK_URL or .pulseboard/plugins.json slack.webhook_url.");
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ text }),
-  });
-  if (!response.ok) throw new Error(`Slack post failed: ${response.status}`);
+function postJson(url, payload, label) {
+  try {
+    execFileSync(
+      "curl",
+      [
+        "--fail",
+        "--silent",
+        "--show-error",
+        "--request",
+        "POST",
+        "--header",
+        "content-type: application/json",
+        "--data",
+        JSON.stringify(payload),
+        url,
+      ],
+      { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+    );
+  } catch (error) {
+    const detail = error.stderr ? String(error.stderr).trim() : "";
+    throw new Error(`${label} post failed${detail ? `: ${detail}` : ""}`);
+  }
 }
 
-async function postTelegram(text, settings = readLocalSettings()) {
+function postSlack(text, settings = readLocalSettings()) {
+  const url = process.env.SLACK_WEBHOOK_URL || (settings.slack && settings.slack.webhook_url);
+  if (!url) throw new Error("Slack webhook is not configured. Set SLACK_WEBHOOK_URL or .pulseboard/plugins.json slack.webhook_url.");
+  postJson(url, { text }, "Slack");
+}
+
+function postTelegram(text, settings = readLocalSettings()) {
   const telegram = settings.telegram || {};
   const token = process.env.TELEGRAM_BOT_TOKEN || telegram.bot_token;
   const chatId = process.env.TELEGRAM_CHAT_ID || telegram.chat_id;
   if (!token || !chatId) throw new Error("Telegram is not configured. Set TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID or .pulseboard/plugins.json telegram credentials.");
-  const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, text }),
-  });
-  if (!response.ok) throw new Error(`Telegram post failed: ${response.status}`);
+  postJson(`https://api.telegram.org/bot${token}/sendMessage`, { chat_id: chatId, text }, "Telegram");
 }
 
-async function postSummary(target, summary) {
+function postSummary(target, summary) {
   const text = renderPostText(summary);
   const settings = readLocalSettings();
   if (target === "slack") return postSlack(text, settings);
@@ -277,15 +291,15 @@ async function postSummary(target, summary) {
     const enabled = settings.enabled || [];
     const targets = enabled.length ? enabled : ["slack", "telegram"];
     for (const item of targets) {
-      if (item === "slack") await postSlack(text, settings);
-      else if (item === "telegram") await postTelegram(text, settings);
+      if (item === "slack") postSlack(text, settings);
+      else if (item === "telegram") postTelegram(text, settings);
     }
     return undefined;
   }
   throw new Error(`Unknown post target: ${target}`);
 }
 
-async function main() {
+function main() {
   const options = parseArgs(process.argv.slice(2));
   if (options.help) {
     console.log(usage());
@@ -303,15 +317,17 @@ async function main() {
     fs.mkdirSync(path.dirname(outputPath), { recursive: true });
     fs.writeFileSync(outputPath, markdown);
   }
-  if (options.post && !options.dryRun) await postSummary(options.post, summary);
+  if (options.post && !options.dryRun) postSummary(options.post, summary);
   if (!options.stdout && !options.dryRun) console.log(`Summary written: ${path.relative(ROOT, outputPath)}`);
 }
 
 if (require.main === module) {
-  main().catch((error) => {
+  try {
+    main();
+  } catch (error) {
     console.error(error.message);
     process.exitCode = 1;
-  });
+  }
 }
 
 module.exports = {

@@ -38,7 +38,7 @@ function isMorning(now, settings) {
   return hour >= start && hour < end;
 }
 
-async function run(options = {}) {
+function run(options = {}) {
   const now = options.now || new Date();
   const settings = readLocalSettings();
   if (settings.auto_on_agent_start === false || settings.auto_on_codex_start === false) return { skipped: "disabled" };
@@ -60,7 +60,7 @@ async function run(options = {}) {
   fs.writeFileSync(outputPath, markdown);
 
   if (hasEnabledPlugins) {
-    await postSummary("all", summary);
+    postSummary("all", summary);
     state.last_posted_target_date = targetDate;
     state.last_posted_at = now.toISOString();
   }
@@ -78,14 +78,15 @@ async function run(options = {}) {
 
 if (require.main === module) {
   const force = process.argv.includes("--force");
-  run({ force }).then((result) => {
+  try {
+    const result = run({ force });
     if (process.env.PULSEBOARD_STARTUP_VERBOSE === "1" || process.env.TRACKALO_STARTUP_VERBOSE === "1") {
       console.log(JSON.stringify(result));
     }
-  }).catch((error) => {
+  } catch (error) {
     console.error(`Pulseboard startup summary failed: ${error.message}`);
     process.exitCode = 1;
-  });
+  }
 }
 
 module.exports = {
