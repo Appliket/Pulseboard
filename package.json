@@ -10,7 +10,7 @@
     "summary": "node tools/daily-summary.js",
     "mcp": "node tools/pulseboard-mcp.js",
     "mcp:http": "node tools/pulseboard-mcp.js --http",
-    "check": "node tests/daily-summary.test.js && node tests/startup-summary.test.js && node tests/init-template.test.js && node tests/workflows.test.js && node tests/pulseboard-mcp.test.js"
+    "check": "node tests/daily-summary.test.js && node tests/startup-summary.test.js && node tests/init-template.test.js && node tests/workflows.test.js && node tests/pulseboard-mcp.test.js && node tests/pulseboard-onboarding.test.js"
   },
   "engines": {
     "node": ">=20"

@@ -158,6 +158,10 @@ npm run mcp:http
 
 The adapter exposes knowledge tools (`search`, `fetch`, `query`, `lint`) and project-management tools (`list_tasks`, `get_board`, `check`) by default. Reviewed write tools (`create_ingest_pr`, `create_task_pr`, `update_task_pr`) are advertised only when `PULSEBOARD_ENABLE_WRITE_TOOLS=1` and OAuth is configured, unless `PULSEBOARD_ALLOW_NOAUTH_WRITES=1` is set for local development. The write path uses branch-and-PR review, so GitHub can be the canonical storage and audit layer without letting ChatGPT write directly to `main`.
 
+Hosted deployments can expose onboarding at `/onboarding`. The endpoint returns setup questions, accepts project/repo details, creates or initializes a GitHub Pulseboard repository with the template files, and returns the `owner/repo` slug. Multi-tenant routing uses `PULSEBOARD_INSTALLS_JSON`, `PULSEBOARD_INSTALLS_PATH`, `PULSEBOARD_DEFAULT_REPO`, or an explicit `X-Pulseboard-Repo`/`?repo=` override.
+
+Vercel deployments use [vercel.json](vercel.json) and [api/[...pulseboard].js](api/[...pulseboard].js) to route `/mcp`, `/tools`, `/manifest.json`, `/docs`, `/health`, and `/onboarding` through the same adapter.
+
 See [plugins/chatgpt-mcp/README.md](plugins/chatgpt-mcp/README.md).
 
 ## Repurpose Audits

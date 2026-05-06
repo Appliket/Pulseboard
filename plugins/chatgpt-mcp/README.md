@@ -79,6 +79,41 @@ The server also exposes:
 - `/tools`: debug view of advertised tools.
 - `/manifest.json`: deployment metadata.
 - `/.well-known/oauth-protected-resource`: OAuth resource metadata scaffold.
+- `/onboarding`: hosted setup schema and repository initialization endpoint.
+
+## Hosted Onboarding
+
+For a single tenant, deploy with one configured repository:
+
+```bash
+PULSEBOARD_STORAGE=github
+PULSEBOARD_GITHUB_REPO=owner/repo
+PULSEBOARD_GITHUB_REF=main
+```
+
+For hosted installs where each user/team gets a different Pulseboard repository, expose `/onboarding` and route installs by OAuth subject:
+
+```bash
+PULSEBOARD_STORAGE=github
+PULSEBOARD_INSTALLS_JSON='{"oauth-sub-or-install-id":"owner/repo"}'
+```
+
+`GET /onboarding` returns the setup questions. `POST /onboarding` accepts answers such as:
+
+```json
+{
+  "project": "Client Portal",
+  "owner": "acme",
+  "repo_name": "client-portal-pulseboard",
+  "private": true,
+  "timezone": "UTC",
+  "subject": "oauth-sub-or-install-id"
+}
+```
+
+Send a GitHub token in `Authorization: Bearer <token>`, or configure `GITHUB_TOKEN`/`GH_TOKEN` server-side. The endpoint creates or initializes the GitHub repository with the Pulseboard files and returns the `owner/repo` slug. If `PULSEBOARD_INSTALLS_PATH` points at a writable JSON file, the subject-to-repo mapping is persisted automatically; on Vercel, prefer storing that mapping in environment-backed JSON or an external store because the filesystem is not durable.
+
+Requests can also select a repo explicitly with `X-Pulseboard-Repo: owner/repo` or `?repo=owner/repo`, useful for development and admin testing.
 
 ## Authentication
 

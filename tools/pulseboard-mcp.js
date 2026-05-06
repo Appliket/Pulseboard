@@ -6,6 +6,7 @@ const { execFileSync } = require("child_process");
 const { McpServer } = require("@modelcontextprotocol/sdk/server/mcp.js");
 const { StreamableHTTPServerTransport } = require("@modelcontextprotocol/sdk/server/streamableHttp.js");
 const z = require("zod/v4");
+const { onboardingSchema, resolveInstalledRepo, setupPulseboardRepository } = require("./pulseboard-onboarding");
 
 const ROOT = path.resolve(__dirname, "..");
 const DEFAULT_CONFIG = "project/config.md";
@@ -27,6 +28,9 @@ function parseArgs(argv) {
     oauthIssuer: process.env.PULSEBOARD_OAUTH_ISSUER || "",
     oauthAudience: process.env.PULSEBOARD_OAUTH_AUDIENCE || process.env.PULSEBOARD_PUBLIC_URL || "",
     oauthJwksUrl: process.env.PULSEBOARD_OAUTH_JWKS_URL || "",
+    installsJson: process.env.PULSEBOARD_INSTALLS_JSON || "",
+    installsPath: process.env.PULSEBOARD_INSTALLS_PATH || "",
+    defaultRepo: process.env.PULSEBOARD_DEFAULT_REPO || "",
   };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
@@ -45,6 +49,7 @@ function parseArgs(argv) {
     else if (arg === "--oauth-issuer") options.oauthIssuer = argv[++index];
     else if (arg === "--oauth-audience") options.oauthAudience = argv[++index];
     else if (arg === "--oauth-jwks-url") options.oauthJwksUrl = argv[++index];
+    else if (arg === "--default-repo") options.defaultRepo = argv[++index];
     else if (arg === "--help" || arg === "-h") options.help = true;
     else throw new Error(`Unknown argument: ${arg}`);
   }
@@ -72,6 +77,8 @@ function usage() {
     "  PULSEBOARD_OAUTH_ISSUER=https://auth.example.com",
     "  PULSEBOARD_OAUTH_AUDIENCE=https://pulseboard.example.com",
     "  PULSEBOARD_OAUTH_JWKS_URL=https://auth.example.com/.well-known/jwks.json",
+    "  PULSEBOARD_INSTALLS_JSON='{\"oauth-sub\":\"owner/repo\"}'",
+    "  PULSEBOARD_DEFAULT_REPO=owner/repo",
     "  GITHUB_TOKEN or GH_TOKEN   Required for private GitHub repos and PR writes.",
   ].join("\n");
 }
@@ -1063,6 +1070,21 @@ function readRequestBody(request, callback) {
   });
 }
 
+function githubTokenFromRequest(request) {
+  const header = request.headers.authorization || "";
+  const match = String(header).match(/^Bearer\s+(.+)$/i);
+  return match ? match[1] : "";
+}
+
+function optionsForRequest(request, url, options = {}, auth = {}) {
+  const headerRepo = request.headers["x-pulseboard-repo"] || "";
+  const queryRepo = url.searchParams.get("repo") || "";
+  const installedRepo = auth.subject ? resolveInstalledRepo(auth.subject, options) : "";
+  const repo = queryRepo || headerRepo || installedRepo || options.repo || options.defaultRepo || "";
+  if (!repo) return options;
+  return { ...options, repo, mode: "github" };
+}
+
 function sendJson(response, status, value) {
   const text = JSON.stringify(value, null, 2);
   response.writeHead(status, { "content-type": "application/json; charset=utf-8" });
@@ -1077,7 +1099,9 @@ async function handleSdkMcpRequest(request, response, body, options) {
     console.error(`OAuth verification failed: ${error.message}`);
     auth = { authenticated: false };
   }
-  const server = createMcpServer({ ...options, ...auth });
+  const url = new URL(request.url, `http://${request.headers.host}`);
+  const requestOptions = optionsForRequest(request, url, options, auth);
+  const server = createMcpServer({ ...requestOptions, ...auth });
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
   });
@@ -1109,6 +1133,8 @@ function appMetadata(options) {
     mcp_endpoint: `${(options.publicUrl || `http://${options.host}:${options.port}`).replace(/\/$/, "")}/mcp`,
     storage: options.mode,
     repo: options.repo || "",
+    multi_tenant_repo_routing: Boolean(options.installsJson || options.installsPath || options.defaultRepo),
+    onboarding_endpoint: `${(options.publicUrl || `http://${options.host}:${options.port}`).replace(/\/$/, "")}/onboarding`,
     write_tools_enabled: activeTools(options).some((tool) => isWriteTool(tool.name)),
     tools: activeTools(options).map((tool) => ({
       name: tool.name,
@@ -1119,46 +1145,73 @@ function appMetadata(options) {
   };
 }
 
-function startHttp(options) {
-  const server = http.createServer((request, response) => {
-    const url = new URL(request.url, `http://${request.headers.host}`);
-    if (request.method === "GET" && url.pathname === "/health") return sendJson(response, 200, { ok: true });
-    if (request.method === "GET" && url.pathname === "/tools") return sendJson(response, 200, { tools: activeTools(options) });
-    if (request.method === "GET" && url.pathname === "/manifest.json") return sendJson(response, 200, appMetadata(options));
-    if (request.method === "GET" && url.pathname === "/docs") return sendJson(response, 200, appMetadata(options));
-    if (request.method === "GET" && url.pathname === "/.well-known/oauth-protected-resource") {
-      return sendJson(response, 200, protectedResourceMetadata(options));
-    }
-    if (request.method === "POST" && url.pathname.startsWith("/tools/")) {
-      return readRequestBody(request, (body) => {
-        const name = decodeURIComponent(url.pathname.slice("/tools/".length));
-        try {
-          sendJson(response, 200, callTool(name, body, options));
-        } catch (error) {
-          sendJson(response, 400, { error: error.message });
+async function handleHttpRequest(request, response, options) {
+  const url = new URL(request.url, `http://${request.headers.host}`);
+  if (request.method === "GET" && url.pathname === "/health") return sendJson(response, 200, { ok: true });
+  if (request.method === "GET" && url.pathname === "/tools") {
+    const requestOptions = optionsForRequest(request, url, options);
+    return sendJson(response, 200, { tools: activeTools(requestOptions), repo: requestOptions.repo || "" });
+  }
+  if (request.method === "GET" && url.pathname === "/manifest.json") return sendJson(response, 200, appMetadata(options));
+  if (request.method === "GET" && url.pathname === "/docs") return sendJson(response, 200, appMetadata(options));
+  if (request.method === "GET" && url.pathname === "/onboarding") return sendJson(response, 200, onboardingSchema());
+  if (request.method === "POST" && url.pathname === "/onboarding") {
+    return readRequestBody(request, async (body) => {
+      try {
+        const result = await setupPulseboardRepository(body, {
+          githubToken: githubTokenFromRequest(request),
+          installsPath: options.installsPath,
+          installsJson: options.installsJson,
+          subject: body.subject,
+        });
+        sendJson(response, 200, result);
+      } catch (error) {
+        sendJson(response, 400, { error: error.message });
+      }
+    });
+  }
+  if (request.method === "GET" && url.pathname === "/.well-known/oauth-protected-resource") {
+    return sendJson(response, 200, protectedResourceMetadata(options));
+  }
+  if (request.method === "POST" && url.pathname.startsWith("/tools/")) {
+    return readRequestBody(request, (body) => {
+      const name = decodeURIComponent(url.pathname.slice("/tools/".length));
+      const requestOptions = optionsForRequest(request, url, options);
+      try {
+        sendJson(response, 200, callTool(name, body, requestOptions));
+      } catch (error) {
+        sendJson(response, 400, { error: error.message });
+      }
+    });
+  }
+  if (request.method === "POST" && url.pathname === "/mcp") {
+    return readRequestBody(request, (body) => {
+      handleSdkMcpRequest(request, response, body, options).catch((error) => {
+        console.error(`MCP request failed: ${error.message}`);
+        if (!response.headersSent) {
+          sendJson(response, 500, {
+            jsonrpc: "2.0",
+            error: { code: -32603, message: "Internal server error" },
+            id: null,
+          });
         }
       });
-    }
-    if (request.method === "POST" && url.pathname === "/mcp") {
-      return readRequestBody(request, (body) => {
-        handleSdkMcpRequest(request, response, body, options).catch((error) => {
-          console.error(`MCP request failed: ${error.message}`);
-          if (!response.headersSent) {
-            sendJson(response, 500, {
-              jsonrpc: "2.0",
-              error: { code: -32603, message: "Internal server error" },
-              id: null,
-            });
-          }
-        });
-      });
-    }
-    if (request.method === "GET" && url.pathname === "/mcp") {
-      response.writeHead(405, { allow: "POST", "content-type": "application/json; charset=utf-8" });
-      response.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32000, message: "Method not allowed." }, id: null }));
-      return undefined;
-    }
-    return sendJson(response, 404, { error: "Not found" });
+    });
+  }
+  if (request.method === "GET" && url.pathname === "/mcp") {
+    response.writeHead(405, { allow: "POST", "content-type": "application/json; charset=utf-8" });
+    response.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32000, message: "Method not allowed." }, id: null }));
+    return undefined;
+  }
+  return sendJson(response, 404, { error: "Not found" });
+}
+
+function startHttp(options) {
+  const server = http.createServer((request, response) => {
+    handleHttpRequest(request, response, options).catch((error) => {
+      console.error(`Pulseboard HTTP request failed: ${error.message}`);
+      if (!response.headersSent) sendJson(response, 500, { error: "Internal server error" });
+    });
   });
   server.on("error", (error) => {
     console.error(`Pulseboard MCP HTTP adapter failed: ${error.message}`);
@@ -1197,9 +1250,12 @@ module.exports = {
   createTaskPr,
   createStorage,
   fetchPulseboard,
+  handleHttpRequest,
   lintPulseboard,
   listTasks,
   loadDocuments,
+  optionsForRequest,
+  parseArgs,
   parseConfigMarkdown,
   queryPulseboard,
   searchPulseboard,

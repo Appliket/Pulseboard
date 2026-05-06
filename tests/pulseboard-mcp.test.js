@@ -7,6 +7,7 @@ const {
   fetchPulseboard,
   lintPulseboard,
   listTasks,
+  optionsForRequest,
   queryPulseboard,
   searchPulseboard,
   tools,
@@ -65,5 +66,19 @@ assert.throws(
   () => callTool("create_task_pr", { title: "Test task" }, options),
   /disabled/,
 );
+
+const requestOptions = optionsForRequest({
+  headers: { "x-pulseboard-repo": "acme/client-portal" },
+}, new URL("https://pulseboard.example.com/tools/search"), options);
+assert.equal(requestOptions.mode, "github");
+assert.equal(requestOptions.repo, "acme/client-portal");
+
+const mappedOptions = optionsForRequest({
+  headers: {},
+}, new URL("https://pulseboard.example.com/mcp"), {
+  ...options,
+  installsJson: '{"user-1":"acme/mapped-board"}',
+}, { subject: "user-1" });
+assert.equal(mappedOptions.repo, "acme/mapped-board");
 
 console.log("pulseboard mcp tests passed");
