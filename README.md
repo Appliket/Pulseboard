@@ -50,7 +50,7 @@ Generated summaries are written locally to `project/summaries/YYYY-MM-DD.md`. Ge
 
 ## Automatic Codex Startup
 
-This template includes a project-local Codex hook in [.codex/config.toml](.codex/config.toml). When you open Codex in a trusted project created from this template, the hook runs `tools/agent-startup-summary.js` in the background through a Codex compatibility wrapper.
+This template includes a project-local Codex hook in [.codex/config.toml](.codex/config.toml). When you open Codex in a trusted project created from this template, the hook runs `tools/codex-startup-summary.js` through a Codex compatibility wrapper.
 
 The startup script:
 

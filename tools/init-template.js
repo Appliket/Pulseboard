@@ -260,7 +260,7 @@ function readmeMarkdown(config, options = {}) {
     "",
     "## Startup Hook",
     "",
-    "This Pulseboard includes a project-local Codex hook in [.codex/config.toml](.codex/config.toml). When Codex opens this trusted project, the hook runs the idempotent startup summary command in the background.",
+    "This Pulseboard includes a project-local Codex hook in [.codex/config.toml](.codex/config.toml). When Codex opens this trusted project, the hook runs the idempotent startup summary command.",
     "",
     "The startup command:",
     "",
