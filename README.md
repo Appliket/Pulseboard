@@ -1,10 +1,10 @@
 # Pulseboard Template
 
-Pulseboard Template is a local-first project-management and daily activity digest starter. The primary workflow is the Karpathy/LLM Wiki style markdown system: tasks, Obsidian Kanban, and graph coherence. Plugins are secondary outbound reporting surfaces for stakeholders such as a CEO.
+Pulseboard Template is a local-first project-management, knowledge-base, and daily activity digest starter. The primary workflow is the Karpathy/LLM Wiki style markdown system: tasks, append-only evidence, maintained synthesis pages, Obsidian Kanban, queryable knowledge, and graph coherence. Plugins are secondary outbound reporting surfaces for stakeholders such as a CEO.
 
 There is no bot listener, database, vector store, hosted service, or shared AI account in the core. Project management remains plain markdown. Integrations are outbound-only: Slack, Telegram, or future plugins receive a digest once a day.
 
-GitHub is optional. Pulseboard can mirror selected implementation-ready task records to GitHub issues, but planning, coherence, audits, and maintained project knowledge stay local by default.
+GitHub is optional. Pulseboard can mirror selected implementation-ready task records to GitHub issues, but planning, coherence, audits, customer evidence, and maintained project knowledge stay local by default.
 
 ## Use This Template
 
@@ -33,7 +33,9 @@ Configure this project for my app: categories feature, bug, chore; priorities p0
 Add "Build the account settings page"
 Update [[build-account-settings-page]] to in-progress
 Check the project wiki
-Injest these architecture notes into project info: ...
+Injest these customer call notes into the knowledge base: ...
+Query the wiki: which future features are best supported by customer evidence?
+Lint the wiki
 Repurpose audit for the configured app and docs
 Sync GitHub issues
 ```
@@ -92,25 +94,35 @@ Pulseboard only reads sources configured in [project/config.md](project/config.m
 - Git commits from configured local repositories.
 - Maintained docs under configured docs paths.
 - Manual activity notes under `raw/activities/`.
+- Durable raw evidence under `raw/info/`, `raw/meetings/`, `raw/requests/`, and `raw/specs/`.
 - Project-management pages under `project/`, including task records and checks.
 
-Raw activity notes are append-only source material. Use filenames like:
+Raw notes are append-only source material. Use filenames like:
 
 ```text
-raw/activities/2026-05-01-customer-call.md
+raw/meetings/2026-05-01-customer-call.md
 ```
 
 ## Markdown Project Wiki
 
-The template keeps the original local-first project-management workflow:
+The template keeps the original local-first project-management and knowledge-base workflow:
 
 - `project/board.md`: Obsidian Kanban human status board.
 - `project/tasks/`: canonical structured task records.
-- `project/info/`: maintained project context.
-- `commands/`: agent-readable procedures for Configure, Add, Update, Check, Injest, Graph, Repurpose Audit, and Sync GitHub Issues.
+- `project/info/`: maintained project context and product synthesis.
+- `raw/meetings/`, `raw/requests/`, `raw/specs/`, and `raw/info/`: append-only evidence from calls, chats, documents, and specs.
+- `commands/`: agent-readable procedures for Configure, Add, Update, Check, Injest, Lint, Query, Graph, Repurpose Audit, and Sync GitHub Issues.
 - `graph/`: rebuildable topology artifacts.
 
 The daily digest layer does not replace the wiki. It summarizes activity from the wiki, docs, raw notes, and configured repositories so stakeholders can get status without entering Obsidian.
+
+## Knowledge Base Commands
+
+Use `Injest` to capture documents, chats, customer requests, call transcripts, specs, or durable notes into append-only `raw/` source files, then maintain source-backed synthesis under `project/info/`.
+
+Use `Query` to ask the local wiki questions such as which feature requests appear most often, what future work is supported by customer evidence, why a decision was made, or what risks are visible in source material. Query answers should cite inspected files, separate evidence from inference, and call out gaps.
+
+Use `Lint` to validate query readiness: stale links, unsourced maintained claims, weak evidence, raw hygiene, and important themes that need synthesis pages.
 
 ## Repurpose Audits
 
@@ -185,4 +197,5 @@ Keep tokens and webhook URLs out of Git. Use `.pulseboard/plugins.json`, environ
 Optional fields:
 
 - `external_docs`: explicit local wiki/docs paths an audit may inspect.
+- `knowledge_sources`: local raw evidence paths that `Query` and `Lint` may inspect.
 - `issue_sync`: local settings for optional GitHub issue mirroring.

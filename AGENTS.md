@@ -4,9 +4,9 @@ These rules govern AI-assisted work in this repository.
 
 ## Purpose
 
-This repository is a Pulseboard template instance. It combines a Karpathy/LLM Wiki style project-management system with optional daily digest plugins.
+This repository is a Pulseboard template instance. It combines a Karpathy/LLM Wiki style project-management and knowledge-base system with optional daily digest plugins.
 
-Project work is represented as small markdown task nodes connected through wikilinks and explicit metadata. The Obsidian Kanban board is the canonical human status view. The graph is the dependency/coherence view. Daily digest plugins summarize previous-working-day activity and post it outbound to channels such as Slack or Telegram.
+Project work is represented as small markdown task nodes connected through wikilinks and explicit metadata. Product knowledge is represented as append-only raw evidence plus maintained synthesis pages. The Obsidian Kanban board is the canonical human status view. The graph is the dependency/coherence view. Daily digest plugins summarize previous-working-day activity and post it outbound to channels such as Slack or Telegram.
 
 The core product is intentionally small:
 
@@ -21,6 +21,9 @@ The core product is intentionally small:
 
 - `raw/activities/` stores append-only source notes about work that may not appear in Git.
 - `raw/info/` stores append-only durable reference material.
+- `raw/meetings/` stores append-only customer calls, interviews, and meeting transcripts.
+- `raw/requests/` stores append-only customer requests, chats, support snippets, and sales notes.
+- `raw/specs/` stores append-only specs, proposals, and product drafts.
 - Never mutate, rewrite, summarize over, or delete raw source files. Add a new raw file for corrections.
 - `project/config.md` stores digest configuration.
 - `project/board.md` stores the Obsidian Kanban board.
@@ -49,8 +52,8 @@ The core product is intentionally small:
 
 ## Project Wiki Rules
 
-- Users invoke project-management commands by asking the agent, for example `Add "request text"`, `Update [[task-id]] to in-progress`, `Repurpose audit`, or `Sync GitHub issues`.
-- Follow `commands/Configure.md`, `commands/Add.md`, `commands/Update.md`, `commands/Check.md`, `commands/Injest.md`, `commands/Graph.md`, `commands/Repurpose-Audit.md`, and `commands/Sync-GitHub-Issues.md`.
+- Users invoke project-management and knowledge-base commands by asking the agent, for example `Add "request text"`, `Update [[task-id]] to in-progress`, `Injest these call notes`, `Query what customers need next`, `Lint the wiki`, `Repurpose audit`, or `Sync GitHub issues`.
+- Follow `commands/Configure.md`, `commands/Add.md`, `commands/Update.md`, `commands/Check.md`, `commands/Injest.md`, `commands/Lint.md`, `commands/Query.md`, `commands/Graph.md`, `commands/Repurpose-Audit.md`, and `commands/Sync-GitHub-Issues.md`.
 - Allowed task states are exactly `todo`, `in-progress`, `in-review`, and `done`.
 - `project/board.md` must keep Obsidian Kanban frontmatter: `kanban-plugin: board`.
 - Board lanes must remain exactly `## To Do`, `## In Progress`, `## In Review`, and `## Done`.
@@ -58,6 +61,15 @@ The core product is intentionally small:
 - Each non-archived task must appear exactly once on the board.
 - Task status and board lane must agree.
 - Graph artifacts are rebuildable and must not be treated as source of truth.
+
+## Knowledge Base Rules
+
+- `Injest` captures documents, chats, transcripts, requests, specs, and durable notes into the appropriate append-only `raw/` directory.
+- Maintained synthesis belongs under `project/info/` and should link back to supporting sources.
+- `Query` answers from configured local sources and inspected raw files. It must cite evidence, separate facts from inference, and identify gaps.
+- `Lint` validates wiki hygiene, source coverage, stale links, and query readiness. It writes reports under `project/checks/YYYY-MM-DD-lint.md`.
+- Do not invent customer needs, feature demand, priorities, commitments, or decisions.
+- Do not read ambient channel history or external services for query answers unless the user explicitly supplies them for the current query.
 
 ## Audit And Issue Sync Rules
 
@@ -85,6 +97,7 @@ The core product is intentionally small:
 - `project/config.md` contains a fenced JSON block consumed by `tools/daily-summary.js`.
 - Repository paths must be local paths.
 - Docs paths must be local paths inside this checkout unless the user explicitly configures otherwise.
+- Knowledge source paths must be local paths and should point to append-only raw evidence directories unless the user explicitly configures otherwise.
 - External wiki/docs paths are optional and must be explicitly configured or supplied by the user for the current audit.
 - The user-confirmed configuration is authoritative.
 

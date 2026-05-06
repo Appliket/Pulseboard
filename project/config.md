@@ -88,6 +88,12 @@ The summary tool reads the JSON block below. Keep secrets out of this file.
     "plugins"
   ],
   "external_docs": [],
+  "knowledge_sources": [
+    "raw/info",
+    "raw/meetings",
+    "raw/requests",
+    "raw/specs"
+  ],
   "activities": [
     "raw/activities"
   ],

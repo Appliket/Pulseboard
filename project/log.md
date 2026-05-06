@@ -4,3 +4,4 @@
 - 2026-05-04: Restored Karpathy-style markdown/Kanban project-management workflow alongside daily digest plugins.
 - 2026-05-04: Renamed the template branding to Pulseboard.
 - 2026-05-04: Added repurpose audit and optional GitHub issue sync workflows while keeping planning local-first.
+- 2026-05-06: Extended the wiki model with source-backed knowledge base commands for Injest, Lint, and Query.
