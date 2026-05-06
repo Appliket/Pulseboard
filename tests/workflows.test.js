@@ -50,7 +50,15 @@ const readme = read("README.md");
 assert.match(readme, /## Repurpose Audits/);
 assert.match(readme, /## GitHub Issue Sync/);
 assert.match(readme, /## Knowledge Base Commands/);
+assert.match(readme, /## ChatGPT MCP Adapter/);
 assert.match(readme, /Query/);
 assert.match(readme, /Lint/);
+
+const chatgptMcp = read("plugins/chatgpt-mcp/README.md");
+assert.match(chatgptMcp, /GitHub-backed mode/);
+assert.match(chatgptMcp, /create_ingest_pr/);
+assert.match(chatgptMcp, /create_task_pr/);
+assert.match(chatgptMcp, /update_task_pr/);
+assert.match(chatgptMcp, /open pull requests instead of committing directly to `main`/);
 
 console.log("workflow documentation tests passed");

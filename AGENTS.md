@@ -35,6 +35,7 @@ The core product is intentionally small:
 - `project/summaries/` stores generated daily summaries.
 - `project/log.md` stores maintained project history.
 - `plugins/` stores outbound posting integrations.
+- `plugins/chatgpt-mcp/` documents the ChatGPT/MCP adapter for exposing the wiki from local files or GitHub storage.
 - `.codex/config.toml` stores the project-local Codex startup hook.
 - `tools/agent-startup-summary.js` is the generic startup entrypoint for any agent or scheduler.
 - `tools/` stores small local scripts.
@@ -68,6 +69,7 @@ The core product is intentionally small:
 - Maintained synthesis belongs under `project/info/` and should link back to supporting sources.
 - `Query` answers from configured local sources and inspected raw files. It must cite evidence, separate facts from inference, and identify gaps.
 - `Lint` validates wiki hygiene, source coverage, stale links, and query readiness. It writes reports under `project/checks/YYYY-MM-DD-lint.md`.
+- `tools/pulseboard-mcp.js` exposes the same wiki and task workflow as MCP/HTTP tools for ChatGPT-style integrations. GitHub-backed writes must create branch-and-PR changes instead of direct commits to `main`.
 - Do not invent customer needs, feature demand, priorities, commitments, or decisions.
 - Do not read ambient channel history or external services for query answers unless the user explicitly supplies them for the current query.
 

@@ -29,3 +29,9 @@ Maintained pages should link back to the raw or maintained sources that support 
 The `Query` command answers questions from local configured sources, cites evidence, separates inference from facts, and surfaces gaps when the wiki does not know enough.
 
 The `Lint` command checks whether the wiki is source-backed and query-ready.
+
+## ChatGPT Adapter
+
+`tools/pulseboard-mcp.js` exposes the knowledge base and project-management commands through MCP/HTTP tools. It can read from the local checkout or from a GitHub repository configured with `PULSEBOARD_GITHUB_REPO`.
+
+Write operations should create pull requests, not direct commits to `main`.

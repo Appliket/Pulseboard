@@ -124,6 +124,36 @@ Use `Query` to ask the local wiki questions such as which feature requests appea
 
 Use `Lint` to validate query readiness: stale links, unsourced maintained claims, weak evidence, raw hygiene, and important themes that need synthesis pages.
 
+## ChatGPT MCP Adapter
+
+Pulseboard can expose the wiki as a ChatGPT-style app surface through [tools/pulseboard-mcp.js](tools/pulseboard-mcp.js). The adapter is dependency-free and supports local filesystem storage or GitHub repository storage.
+
+Run local stdio MCP mode:
+
+```bash
+npm run mcp
+```
+
+Run HTTP development mode:
+
+```bash
+npm run mcp:http
+```
+
+Run against a GitHub repository:
+
+```bash
+PULSEBOARD_STORAGE=github \
+PULSEBOARD_GITHUB_REPO=owner/repo \
+PULSEBOARD_GITHUB_REF=main \
+GITHUB_TOKEN=... \
+npm run mcp:http
+```
+
+The adapter exposes knowledge tools (`search`, `fetch`, `query`, `lint`), project-management tools (`list_tasks`, `get_board`, `check`), and reviewed write tools (`create_ingest_pr`, `create_task_pr`, `update_task_pr`). The write path uses branch-and-PR review, so GitHub can be the canonical storage and audit layer without letting ChatGPT write directly to `main`.
+
+See [plugins/chatgpt-mcp/README.md](plugins/chatgpt-mcp/README.md).
+
 ## Repurpose Audits
 
 Use `Repurpose audit` when a project needs a product, migration, cleanup, or reuse pass. The procedure reads configured local repositories and docs, plus explicitly configured external wiki/docs paths if present.

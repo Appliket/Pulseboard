@@ -8,7 +8,9 @@
     "init": "node tools/init-template.js",
     "agent-start": "node tools/agent-startup-summary.js",
     "summary": "node tools/daily-summary.js",
-    "check": "node tests/daily-summary.test.js && node tests/startup-summary.test.js && node tests/init-template.test.js && node tests/workflows.test.js"
+    "mcp": "node tools/pulseboard-mcp.js",
+    "mcp:http": "node tools/pulseboard-mcp.js --http",
+    "check": "node tests/daily-summary.test.js && node tests/startup-summary.test.js && node tests/init-template.test.js && node tests/workflows.test.js && node tests/pulseboard-mcp.test.js"
   },
   "engines": {
     "node": ">=20"
