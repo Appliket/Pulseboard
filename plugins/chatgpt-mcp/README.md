@@ -115,6 +115,28 @@ Send a GitHub token in `Authorization: Bearer <token>`, or configure `GITHUB_TOK
 
 Requests can also select a repo explicitly with `X-Pulseboard-Repo: owner/repo` or `?repo=owner/repo`, useful for development and admin testing.
 
+## Render Deployment
+
+This repository includes [render.yaml](../../render.yaml) for a Render Web Service:
+
+- Runtime: Node.js.
+- Start command: `npm start`.
+- Host binding: `HOST=0.0.0.0`.
+- Persistent install mapping: `PULSEBOARD_INSTALLS_PATH=/var/data/pulseboard-installs.json`.
+- Disk mount: `/var/data`.
+
+Create the service from the Blueprint, then set these secret/env values in Render:
+
+```bash
+PULSEBOARD_PUBLIC_URL=https://your-render-service.onrender.com
+GITHUB_TOKEN=...
+PULSEBOARD_OAUTH_ISSUER=...
+PULSEBOARD_OAUTH_AUDIENCE=https://your-render-service.onrender.com
+PULSEBOARD_OAUTH_JWKS_URL=...
+```
+
+For early admin testing before OAuth is wired, set `PULSEBOARD_ALLOW_NOAUTH_WRITES=1` manually in Render and use `X-Pulseboard-Repo: owner/repo` or `?repo=owner/repo`. Remove that flag before exposing the service publicly.
+
 ## Authentication
 
 Read-only public-repo use can run without OAuth. Anything that exposes private repositories or write tools should be deployed behind proper OAuth 2.1 for MCP. Set:

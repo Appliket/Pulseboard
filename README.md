@@ -160,6 +160,8 @@ The adapter exposes knowledge tools (`search`, `fetch`, `query`, `lint`) and pro
 
 Hosted deployments can expose onboarding at `/onboarding`. The endpoint returns setup questions, accepts project/repo details, creates or initializes a GitHub Pulseboard repository with the template files, and returns the `owner/repo` slug. Multi-tenant routing uses `PULSEBOARD_INSTALLS_JSON`, `PULSEBOARD_INSTALLS_PATH`, `PULSEBOARD_DEFAULT_REPO`, or an explicit `X-Pulseboard-Repo`/`?repo=` override.
 
+Render deployments use [render.yaml](render.yaml) to run the Node MCP server as a web service with a persistent disk mounted at `/var/data`. The install mapping file is stored at `/var/data/pulseboard-installs.json`, so onboarding-created repo mappings survive deploys and restarts.
+
 Vercel deployments use [vercel.json](vercel.json) and [api/[...pulseboard].js](api/[...pulseboard].js) to route `/mcp`, `/tools`, `/manifest.json`, `/docs`, `/health`, and `/onboarding` through the same adapter.
 
 See [plugins/chatgpt-mcp/README.md](plugins/chatgpt-mcp/README.md).

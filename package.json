@@ -6,6 +6,7 @@
   "type": "commonjs",
   "scripts": {
     "init": "node tools/init-template.js",
+    "start": "node tools/pulseboard-mcp.js --http",
     "agent-start": "node tools/agent-startup-summary.js",
     "summary": "node tools/daily-summary.js",
     "mcp": "node tools/pulseboard-mcp.js",
