@@ -27,7 +27,9 @@ services:
         sync: false
       - key: PULSEBOARD_OAUTH_JWKS_URL
         sync: false
-      - key: GITHUB_TOKEN
+      - key: GITHUB_APP_ID
+        sync: false
+      - key: GITHUB_APP_PRIVATE_KEY
         sync: false
     disk:
       name: pulseboard-data

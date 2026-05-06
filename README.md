@@ -152,13 +152,15 @@ Run against a GitHub repository:
 PULSEBOARD_STORAGE=github \
 PULSEBOARD_GITHUB_REPO=owner/repo \
 PULSEBOARD_GITHUB_REF=main \
-GITHUB_TOKEN=... \
+GITHUB_INSTALLATION_ID=12345 \
+GITHUB_APP_ID=... \
+GITHUB_APP_PRIVATE_KEY=... \
 npm run mcp:http
 ```
 
 The adapter exposes knowledge tools (`search`, `fetch`, `query`, `lint`) and project-management tools (`list_tasks`, `get_board`, `check`) by default. Reviewed write tools (`create_ingest_pr`, `create_task_pr`, `update_task_pr`) are advertised only when `PULSEBOARD_ENABLE_WRITE_TOOLS=1` and OAuth is configured, unless `PULSEBOARD_ALLOW_NOAUTH_WRITES=1` is set for local development. The write path uses branch-and-PR review, so GitHub can be the canonical storage and audit layer without letting ChatGPT write directly to `main`.
 
-Hosted deployments can expose onboarding at `/onboarding`. The endpoint returns setup questions, accepts project/repo details, creates or initializes a GitHub Pulseboard repository with the template files, and returns the `owner/repo` slug. Multi-tenant routing uses `PULSEBOARD_INSTALLS_JSON`, `PULSEBOARD_INSTALLS_PATH`, `PULSEBOARD_DEFAULT_REPO`, or an explicit `X-Pulseboard-Repo`/`?repo=` override.
+Hosted deployments can expose onboarding at `/onboarding`. The endpoint returns setup questions, accepts project/repo details plus a GitHub App `installation_id`, creates or initializes a GitHub Pulseboard repository with the template files, and returns the `owner/repo` slug. Multi-tenant routing uses `PULSEBOARD_INSTALLS_JSON`, `PULSEBOARD_INSTALLS_PATH`, `PULSEBOARD_DEFAULT_REPO`, or an explicit `X-Pulseboard-Repo`/`?repo=` override.
 
 Render deployments use [render.yaml](render.yaml) to run the Node MCP server as a web service with a persistent disk mounted at `/var/data`. The install mapping file is stored at `/var/data/pulseboard-installs.json`, so onboarding-created repo mappings survive deploys and restarts.
 

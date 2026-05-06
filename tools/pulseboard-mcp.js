@@ -6,7 +6,12 @@ const { execFileSync } = require("child_process");
 const { McpServer } = require("@modelcontextprotocol/sdk/server/mcp.js");
 const { StreamableHTTPServerTransport } = require("@modelcontextprotocol/sdk/server/streamableHttp.js");
 const z = require("zod/v4");
-const { onboardingSchema, resolveInstalledRepo, setupPulseboardRepository } = require("./pulseboard-onboarding");
+const {
+  createGitHubAppJwt,
+  onboardingSchema,
+  resolveInstall,
+  setupPulseboardRepository,
+} = require("./pulseboard-onboarding");
 
 const ROOT = path.resolve(__dirname, "..");
 const DEFAULT_CONFIG = "project/config.md";
@@ -31,6 +36,9 @@ function parseArgs(argv) {
     installsJson: process.env.PULSEBOARD_INSTALLS_JSON || "",
     installsPath: process.env.PULSEBOARD_INSTALLS_PATH || "",
     defaultRepo: process.env.PULSEBOARD_DEFAULT_REPO || "",
+    githubAppId: process.env.GITHUB_APP_ID || "",
+    githubAppPrivateKey: process.env.GITHUB_APP_PRIVATE_KEY || "",
+    githubInstallationId: process.env.GITHUB_INSTALLATION_ID || "",
   };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
@@ -50,6 +58,7 @@ function parseArgs(argv) {
     else if (arg === "--oauth-audience") options.oauthAudience = argv[++index];
     else if (arg === "--oauth-jwks-url") options.oauthJwksUrl = argv[++index];
     else if (arg === "--default-repo") options.defaultRepo = argv[++index];
+    else if (arg === "--github-installation-id") options.githubInstallationId = argv[++index];
     else if (arg === "--help" || arg === "-h") options.help = true;
     else throw new Error(`Unknown argument: ${arg}`);
   }
@@ -79,7 +88,9 @@ function usage() {
     "  PULSEBOARD_OAUTH_JWKS_URL=https://auth.example.com/.well-known/jwks.json",
     "  PULSEBOARD_INSTALLS_JSON='{\"oauth-sub\":\"owner/repo\"}'",
     "  PULSEBOARD_DEFAULT_REPO=owner/repo",
-    "  GITHUB_TOKEN or GH_TOKEN   Required for private GitHub repos and PR writes.",
+    "  GITHUB_APP_ID=12345",
+    "  GITHUB_APP_PRIVATE_KEY=<private-key-pem>",
+    "  GITHUB_INSTALLATION_ID=12345",
   ].join("\n");
 }
 
@@ -111,11 +122,35 @@ function walkLocal(root, relativePath) {
     .flatMap((entry) => walkLocal(root, path.join(relativePath, entry)));
 }
 
-function githubToken() {
+function githubInstallationAccessTokenSync(installationId, options = {}) {
+  if (!installationId) return "";
+  const jwt = createGitHubAppJwt(options);
+  const output = execFileSync("curl", [
+    "--fail",
+    "--silent",
+    "--show-error",
+    "--request",
+    "POST",
+    "--header",
+    "accept: application/vnd.github+json",
+    "--header",
+    `authorization: Bearer ${jwt}`,
+    "--header",
+    "x-github-api-version: 2022-11-28",
+    `https://api.github.com/app/installations/${encodeURIComponent(installationId)}/access_tokens`,
+  ], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+  const data = JSON.parse(output);
+  return data.token || "";
+}
+
+function githubToken(options = {}) {
+  if (options.githubToken) return options.githubToken;
+  const installationId = options.githubInstallationId || options.installationId || process.env.GITHUB_INSTALLATION_ID || "";
+  if (installationId) return githubInstallationAccessTokenSync(installationId, options);
   return process.env.GITHUB_TOKEN || process.env.GH_TOKEN || "";
 }
 
-function githubRequest(method, apiPath, body, token = githubToken()) {
+function githubRequest(method, apiPath, body, token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || "") {
   const args = [
     "--fail",
     "--silent",
@@ -139,27 +174,27 @@ function githubRequest(method, apiPath, body, token = githubToken()) {
   }
 }
 
-function githubTree(repo, ref) {
+function githubTree(repo, ref, token) {
   const encodedRef = encodeURIComponent(ref);
-  const data = githubRequest("GET", `/repos/${repo}/git/trees/${encodedRef}?recursive=1`);
+  const data = githubRequest("GET", `/repos/${repo}/git/trees/${encodedRef}?recursive=1`, undefined, token);
   return (data.tree || [])
     .filter((item) => item.type === "blob")
     .map((item) => item.path);
 }
 
-function githubReadFile(repo, ref, relativePath) {
+function githubReadFile(repo, ref, relativePath, token) {
   const encodedPath = relativePath.split("/").map(encodeURIComponent).join("/");
   const encodedRef = encodeURIComponent(ref);
-  const data = githubRequest("GET", `/repos/${repo}/contents/${encodedPath}?ref=${encodedRef}`);
+  const data = githubRequest("GET", `/repos/${repo}/contents/${encodedPath}?ref=${encodedRef}`, undefined, token);
   if (!data.content) return "";
   return Buffer.from(String(data.content).replace(/\s/g, ""), "base64").toString("utf8");
 }
 
-function githubFileSha(repo, ref, relativePath) {
+function githubFileSha(repo, ref, relativePath, token) {
   try {
     const encodedPath = relativePath.split("/").map(encodeURIComponent).join("/");
     const encodedRef = encodeURIComponent(ref);
-    const data = githubRequest("GET", `/repos/${repo}/contents/${encodedPath}?ref=${encodedRef}`);
+    const data = githubRequest("GET", `/repos/${repo}/contents/${encodedPath}?ref=${encodedRef}`, undefined, token);
     return data.sha || "";
   } catch (error) {
     return "";
@@ -169,15 +204,16 @@ function githubFileSha(repo, ref, relativePath) {
 function createStorage(options) {
   if (options.mode === "github") {
     if (!options.repo) throw new Error("GitHub storage requires --repo or PULSEBOARD_GITHUB_REPO.");
+    const token = githubToken(options);
     return {
       kind: "github",
       repo: options.repo,
       ref: options.ref,
       readFile(relativePath) {
-        return githubReadFile(options.repo, options.ref, relativePath);
+        return githubReadFile(options.repo, options.ref, relativePath, token);
       },
       listFiles(paths) {
-        const all = githubTree(options.repo, options.ref);
+        const all = githubTree(options.repo, options.ref, token);
         return all.filter((file) => paths.some((candidate) => file === candidate || file.startsWith(`${candidate}/`)));
       },
       url(relativePath) {
@@ -574,11 +610,11 @@ function rawDirectory(sourceType) {
 function githubCreatePullRequest(input, options = {}) {
   const repo = options.repo || process.env.PULSEBOARD_GITHUB_REPO;
   const base = options.ref || process.env.PULSEBOARD_GITHUB_REF || "main";
-  const token = githubToken();
+  const token = githubToken(options);
   if (!repo) throw new Error("GitHub write tools require PULSEBOARD_GITHUB_REPO or --repo.");
-  if (!token) throw new Error("GitHub write tools require GITHUB_TOKEN or GH_TOKEN.");
+  if (!token) throw new Error("GitHub write tools require a GitHub App installation id or a GitHub token.");
   const branch = input.branch || `pulseboard/${slug(input.branch_topic || input.title || "change")}-${Date.now()}`;
-  const baseRef = githubRequest("GET", `/repos/${repo}/git/ref/heads/${encodeURIComponent(base)}`);
+  const baseRef = githubRequest("GET", `/repos/${repo}/git/ref/heads/${encodeURIComponent(base)}`, undefined, token);
   githubRequest("POST", `/repos/${repo}/git/refs`, {
     ref: `refs/heads/${branch}`,
     sha: baseRef.object.sha,
@@ -590,7 +626,7 @@ function githubCreatePullRequest(input, options = {}) {
       content: Buffer.from(content).toString("base64"),
       branch,
     };
-    const sha = githubFileSha(repo, branch, file.path);
+    const sha = githubFileSha(repo, branch, file.path, token);
     if (sha) body.sha = sha;
     const encodedPath = file.path.split("/").map(encodeURIComponent).join("/");
     githubRequest("PUT", `/repos/${repo}/contents/${encodedPath}`, body, token);
@@ -1078,11 +1114,14 @@ function githubTokenFromRequest(request) {
 
 function optionsForRequest(request, url, options = {}, auth = {}) {
   const headerRepo = request.headers["x-pulseboard-repo"] || "";
+  const headerInstallationId = request.headers["x-github-installation-id"] || "";
   const queryRepo = url.searchParams.get("repo") || "";
-  const installedRepo = auth.subject ? resolveInstalledRepo(auth.subject, options) : "";
-  const repo = queryRepo || headerRepo || installedRepo || options.repo || options.defaultRepo || "";
+  const queryInstallationId = url.searchParams.get("installation_id") || "";
+  const install = auth.subject ? resolveInstall(auth.subject, options) : {};
+  const repo = queryRepo || headerRepo || install.repo || options.repo || options.defaultRepo || "";
+  const githubInstallationId = queryInstallationId || headerInstallationId || install.installation_id || options.githubInstallationId || "";
   if (!repo) return options;
-  return { ...options, repo, mode: "github" };
+  return { ...options, repo, githubInstallationId, mode: "github" };
 }
 
 function sendJson(response, status, value) {

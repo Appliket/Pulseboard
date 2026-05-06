@@ -68,17 +68,22 @@ assert.throws(
 );
 
 const requestOptions = optionsForRequest({
-  headers: { "x-pulseboard-repo": "acme/client-portal" },
+  headers: {
+    "x-pulseboard-repo": "acme/client-portal",
+    "x-github-installation-id": "456",
+  },
 }, new URL("https://pulseboard.example.com/tools/search"), options);
 assert.equal(requestOptions.mode, "github");
 assert.equal(requestOptions.repo, "acme/client-portal");
+assert.equal(requestOptions.githubInstallationId, "456");
 
 const mappedOptions = optionsForRequest({
   headers: {},
 }, new URL("https://pulseboard.example.com/mcp"), {
   ...options,
-  installsJson: '{"user-1":"acme/mapped-board"}',
+  installsJson: '{"user-1":{"repo":"acme/mapped-board","installation_id":"789"}}',
 }, { subject: "user-1" });
 assert.equal(mappedOptions.repo, "acme/mapped-board");
+assert.equal(mappedOptions.githubInstallationId, "789");
 
 console.log("pulseboard mcp tests passed");

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 const { buildConfig, configMarkdown, kebab, readmeMarkdown } = require("./init-template");
 
 const ROOT = path.resolve(__dirname, "..");
@@ -14,6 +15,18 @@ function parseInstallMappings(value) {
   return parsed;
 }
 
+function normalizeInstallRecord(value) {
+  if (!value) return {};
+  if (typeof value === "string") return { repo: value };
+  if (typeof value === "object" && !Array.isArray(value)) {
+    return {
+      repo: value.repo || "",
+      installation_id: value.installation_id || value.installationId || "",
+    };
+  }
+  return {};
+}
+
 function readInstallMappings(options = {}) {
   const mappings = parseInstallMappings(options.installsJson || process.env.PULSEBOARD_INSTALLS_JSON || "");
   const installsPath = options.installsPath || process.env.PULSEBOARD_INSTALLS_PATH || "";
@@ -22,19 +35,29 @@ function readInstallMappings(options = {}) {
   return { ...mappings, ...parseInstallMappings(fs.readFileSync(installsPath, "utf8")) };
 }
 
-function writeInstallMapping(subject, repo, options = {}) {
+function writeInstallMapping(subject, record, options = {}) {
   const installsPath = options.installsPath || process.env.PULSEBOARD_INSTALLS_PATH || "";
-  if (!subject || !repo || !installsPath) return false;
+  const normalized = normalizeInstallRecord(record);
+  if (!subject || !normalized.repo || !installsPath) return false;
   const existing = readInstallMappings({ ...options, installsPath });
-  const next = { ...existing, [subject]: repo };
+  const next = { ...existing, [subject]: normalized };
   fs.mkdirSync(path.dirname(installsPath), { recursive: true });
   fs.writeFileSync(installsPath, `${JSON.stringify(next, null, 2)}\n`);
   return true;
 }
 
-function resolveInstalledRepo(subject, options = {}) {
+function resolveInstall(subject, options = {}) {
   const mappings = readInstallMappings(options);
-  return mappings[subject] || mappings.default || options.defaultRepo || process.env.PULSEBOARD_DEFAULT_REPO || "";
+  const mapped = normalizeInstallRecord(mappings[subject] || mappings.default);
+  if (mapped.repo) return mapped;
+  return {
+    repo: options.defaultRepo || process.env.PULSEBOARD_DEFAULT_REPO || "",
+    installation_id: options.githubInstallationId || process.env.GITHUB_INSTALLATION_ID || "",
+  };
+}
+
+function resolveInstalledRepo(subject, options = {}) {
+  return resolveInstall(subject, options).repo;
 }
 
 function onboardingSchema() {
@@ -44,14 +67,15 @@ function onboardingSchema() {
     fields: [
       { name: "project", type: "string", description: "Human project name, for example Client Portal." },
       { name: "repo", type: "string", description: "Existing owner/repo slug. Omit when creating a new repo." },
-      { name: "owner", type: "string", description: "GitHub organization for new repos. Omit for the authenticated user's account." },
+      { name: "owner", type: "string", description: "GitHub account or organization where the GitHub App is installed. Required when creating a repo with installation_id." },
       { name: "repo_name", type: "string", description: "New repository name. Defaults from project." },
       { name: "private", type: "boolean", description: "Create a private repository. Defaults to true." },
       { name: "timezone", type: "string", description: "IANA timezone for daily summaries. Defaults to Europe/Rome." },
+      { name: "installation_id", type: "string", description: "GitHub App installation id for short-lived installation tokens." },
       { name: "subject", type: "string", description: "Optional OAuth subject/install id to map to the created repo." },
     ],
     notes: [
-      "POST these answers to /onboarding with a GitHub token in Authorization: Bearer <token> or configure GITHUB_TOKEN on the server.",
+      "Install the GitHub App, then POST these answers to /onboarding with installation_id. The server mints a short-lived installation token from GITHUB_APP_ID and GITHUB_APP_PRIVATE_KEY.",
       "The response returns the owner/repo slug used by /mcp. Set PULSEBOARD_INSTALLS_JSON or PULSEBOARD_INSTALLS_PATH for automatic per-user repo routing.",
     ],
   };
@@ -143,6 +167,50 @@ function githubRequest(method, apiPath, body, token) {
   });
 }
 
+function base64Url(value) {
+  return Buffer.from(value).toString("base64url");
+}
+
+function githubAppPrivateKey(options = {}) {
+  return String(options.githubAppPrivateKey || process.env.GITHUB_APP_PRIVATE_KEY || "")
+    .replace(/\\n/g, "\n");
+}
+
+function createGitHubAppJwt(options = {}) {
+  const appId = options.githubAppId || process.env.GITHUB_APP_ID || "";
+  const privateKey = githubAppPrivateKey(options);
+  if (!appId || !privateKey) throw new Error("GitHub App auth requires GITHUB_APP_ID and GITHUB_APP_PRIVATE_KEY.");
+  const now = Math.floor(Date.now() / 1000);
+  const header = base64Url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+  const payload = base64Url(JSON.stringify({
+    iat: now - 60,
+    exp: now + (9 * 60),
+    iss: String(appId),
+  }));
+  const signingInput = `${header}.${payload}`;
+  const signature = crypto.sign("RSA-SHA256", Buffer.from(signingInput), privateKey).toString("base64url");
+  return `${signingInput}.${signature}`;
+}
+
+async function githubInstallationAccessToken(installationId, options = {}) {
+  if (!installationId) throw new Error("GitHub App auth requires installation_id.");
+  const jwt = createGitHubAppJwt(options);
+  const data = await githubRequest(
+    "POST",
+    `/app/installations/${encodeURIComponent(installationId)}/access_tokens`,
+    undefined,
+    jwt,
+  );
+  return data.token || "";
+}
+
+async function githubAuthToken(input = {}, options = {}) {
+  if (input.github_token || options.githubToken) return input.github_token || options.githubToken;
+  const installationId = input.installation_id || input.installationId || options.githubInstallationId || options.installationId || "";
+  if (installationId) return githubInstallationAccessToken(installationId, options);
+  return process.env.GITHUB_TOKEN || process.env.GH_TOKEN || "";
+}
+
 function splitRepo(repo) {
   const match = String(repo || "").match(/^([^/\s]+)\/([^/\s]+)$/);
   if (!match) throw new Error("Repository must be an owner/repo slug.");
@@ -153,6 +221,9 @@ async function createRepository(input, token) {
   const project = input.project || "Pulseboard";
   const name = input.repo_name || input.repoName || (input.repo ? splitRepo(input.repo).name : kebab(project));
   const owner = input.owner || "";
+  if ((input.installation_id || input.installationId) && !owner) {
+    throw new Error("owner is required when creating a repository with a GitHub App installation_id.");
+  }
   const payload = {
     name,
     private: input.private !== false,
@@ -199,29 +270,35 @@ async function initializeRepository(repo, input, token) {
 
 async function setupPulseboardRepository(input = {}, options = {}) {
   if (!input.project) throw new Error("project is required.");
-  const token = input.github_token || options.githubToken || process.env.GITHUB_TOKEN || process.env.GH_TOKEN || "";
+  const installationId = input.installation_id || input.installationId || options.githubInstallationId || options.installationId || "";
+  const token = await githubAuthToken(input, options);
   const repo = input.create_repository === false && input.repo
     ? splitRepo(input.repo).fullName
     : await createRepository(input, token);
   const files = await initializeRepository(repo, input, token);
-  const mappingPersisted = writeInstallMapping(input.subject || options.subject || "", repo, options);
+  const installRecord = { repo, installation_id: installationId };
+  const mappingPersisted = writeInstallMapping(input.subject || options.subject || installationId, installRecord, options);
   return {
     repo,
     html_url: `https://github.com/${repo}`,
     files,
     mapping_persisted: mappingPersisted,
-    install_mapping: input.subject ? { [input.subject]: repo } : undefined,
+    install_mapping: input.subject || installationId ? { [input.subject || installationId]: installRecord } : undefined,
     next_steps: [
       `Set PULSEBOARD_STORAGE=github and PULSEBOARD_GITHUB_REPO=${repo} for a single-tenant deployment.`,
-      "For multi-tenant routing, set PULSEBOARD_INSTALLS_JSON to map OAuth subjects/install ids to repos, or set PULSEBOARD_INSTALLS_PATH on a writable host.",
+      "For multi-tenant routing, keep PULSEBOARD_INSTALLS_PATH on persistent storage so OAuth subjects/install ids resolve to repos and GitHub App installations.",
     ],
   };
 }
 
 module.exports = {
   onboardingSchema,
+  createGitHubAppJwt,
+  githubAuthToken,
+  githubInstallationAccessToken,
   parseInstallMappings,
   readInstallMappings,
+  resolveInstall,
   resolveInstalledRepo,
   setupPulseboardRepository,
   splitRepo,

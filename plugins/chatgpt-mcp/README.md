@@ -30,11 +30,13 @@ GitHub-backed mode:
 PULSEBOARD_STORAGE=github \
 PULSEBOARD_GITHUB_REPO=owner/repo \
 PULSEBOARD_GITHUB_REF=main \
-GITHUB_TOKEN=... \
+GITHUB_INSTALLATION_ID=12345 \
+GITHUB_APP_ID=... \
+GITHUB_APP_PRIVATE_KEY=... \
 npm run mcp:http
 ```
 
-`GITHUB_TOKEN` or `GH_TOKEN` is required for private repositories and for write tools.
+For production, use a GitHub App installation id plus `GITHUB_APP_ID` and `GITHUB_APP_PRIVATE_KEY`. The server mints short-lived installation tokens when it reads private repositories or opens pull requests. A direct GitHub token is still accepted for local/admin testing, but it is not the recommended hosted setup.
 
 Write tools are hidden by default. Enable them explicitly:
 
@@ -95,7 +97,7 @@ For hosted installs where each user/team gets a different Pulseboard repository,
 
 ```bash
 PULSEBOARD_STORAGE=github
-PULSEBOARD_INSTALLS_JSON='{"oauth-sub-or-install-id":"owner/repo"}'
+PULSEBOARD_INSTALLS_JSON='{"oauth-sub-or-install-id":{"repo":"owner/repo","installation_id":"12345"}}'
 ```
 
 `GET /onboarding` returns the setup questions. `POST /onboarding` accepts answers such as:
@@ -107,13 +109,14 @@ PULSEBOARD_INSTALLS_JSON='{"oauth-sub-or-install-id":"owner/repo"}'
   "repo_name": "client-portal-pulseboard",
   "private": true,
   "timezone": "UTC",
+  "installation_id": "12345",
   "subject": "oauth-sub-or-install-id"
 }
 ```
 
-Send a GitHub token in `Authorization: Bearer <token>`, or configure `GITHUB_TOKEN`/`GH_TOKEN` server-side. The endpoint creates or initializes the GitHub repository with the Pulseboard files and returns the `owner/repo` slug. If `PULSEBOARD_INSTALLS_PATH` points at a writable JSON file, the subject-to-repo mapping is persisted automatically; on Vercel, prefer storing that mapping in environment-backed JSON or an external store because the filesystem is not durable.
+The endpoint creates or initializes the GitHub repository with the Pulseboard files and returns the `owner/repo` slug. With `installation_id`, the server uses GitHub App auth and does not need a static PAT. If `PULSEBOARD_INSTALLS_PATH` points at a writable JSON file, the subject-to-repo plus installation mapping is persisted automatically; on Vercel, prefer storing that mapping in environment-backed JSON or an external store because the filesystem is not durable.
 
-Requests can also select a repo explicitly with `X-Pulseboard-Repo: owner/repo` or `?repo=owner/repo`, useful for development and admin testing.
+Requests can also select a repo explicitly with `X-Pulseboard-Repo: owner/repo` plus `X-GitHub-Installation-Id: 12345`, or `?repo=owner/repo&installation_id=12345`, useful for development and admin testing.
 
 ## Render Deployment
 
@@ -129,13 +132,16 @@ Create the service from the Blueprint, then set these secret/env values in Rende
 
 ```bash
 PULSEBOARD_PUBLIC_URL=https://your-render-service.onrender.com
-GITHUB_TOKEN=...
+GITHUB_APP_ID=...
+GITHUB_APP_PRIVATE_KEY=...
 PULSEBOARD_OAUTH_ISSUER=...
 PULSEBOARD_OAUTH_AUDIENCE=https://your-render-service.onrender.com
 PULSEBOARD_OAUTH_JWKS_URL=...
 ```
 
-For early admin testing before OAuth is wired, set `PULSEBOARD_ALLOW_NOAUTH_WRITES=1` manually in Render and use `X-Pulseboard-Repo: owner/repo` or `?repo=owner/repo`. Remove that flag before exposing the service publicly.
+Create a GitHub App with repository permissions for Contents write, Pull requests write, Metadata read, and Administration write if onboarding should create repositories. Install it on the target account/org and pass both `owner` and the resulting `installation_id` to `/onboarding`.
+
+For early admin testing before OAuth is wired, set `PULSEBOARD_ALLOW_NOAUTH_WRITES=1` manually in Render and use `X-Pulseboard-Repo: owner/repo` plus `X-GitHub-Installation-Id: 12345`, or `?repo=owner/repo&installation_id=12345`. Remove that flag before exposing the service publicly.
 
 ## Authentication
 

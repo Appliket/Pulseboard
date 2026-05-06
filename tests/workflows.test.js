@@ -59,6 +59,8 @@ assert.match(chatgptMcp, /GitHub-backed mode/);
 assert.match(chatgptMcp, /Streamable HTTP/);
 assert.match(chatgptMcp, /Render Deployment/);
 assert.match(chatgptMcp, /PULSEBOARD_INSTALLS_PATH=\/var\/data\/pulseboard-installs\.json/);
+assert.match(chatgptMcp, /GITHUB_APP_ID/);
+assert.match(chatgptMcp, /GITHUB_APP_PRIVATE_KEY/);
 assert.match(chatgptMcp, /PULSEBOARD_ENABLE_WRITE_TOOLS=1/);
 assert.match(chatgptMcp, /PULSEBOARD_ALLOW_NOAUTH_WRITES=1/);
 assert.match(chatgptMcp, /verifies bearer JWTs/);
@@ -73,5 +75,7 @@ assert.match(render, /runtime: node/);
 assert.match(render, /startCommand: npm start/);
 assert.match(render, /mountPath: \/var\/data/);
 assert.match(render, /PULSEBOARD_INSTALLS_PATH/);
+assert.match(render, /GITHUB_APP_ID/);
+assert.match(render, /GITHUB_APP_PRIVATE_KEY/);
 
 console.log("workflow documentation tests passed");
