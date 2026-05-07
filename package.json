@@ -1,26 +1,16 @@
 {
-  "name": "pulseboard-plugin",
+  "name": "pulseboard-obsidian-template",
   "version": "0.2.0",
   "private": true,
-  "description": "Pulseboard ChatGPT/MCP plugin package plus standalone Obsidian template seed.",
+  "description": "Local-first Obsidian project wiki, task board, knowledge base, and daily digest template.",
   "type": "commonjs",
   "scripts": {
     "init": "node tools/init-template.js",
-    "start": "node tools/pulseboard-mcp.js --http",
     "agent-start": "node tools/agent-startup-summary.js",
     "summary": "node tools/daily-summary.js",
-    "mcp": "node tools/pulseboard-mcp.js",
-    "mcp:http": "node tools/pulseboard-mcp.js --http",
-    "check": "node tests/daily-summary.test.js && node tests/startup-summary.test.js && node tests/init-template.test.js && node tests/workflows.test.js && node tests/pulseboard-mcp.test.js && node tests/pulseboard-onboarding.test.js"
+    "check": "node tests/daily-summary.test.js && node tests/startup-summary.test.js && node tests/init-template.test.js && node tests/workflows.test.js && node tools/daily-summary.js --dry-run"
   },
   "engines": {
     "node": ">=20"
-  },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
-    "zod": "^3.25.76"
-  },
-  "overrides": {
-    "ip-address": "10.2.0"
   }
 }

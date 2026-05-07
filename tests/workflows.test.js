@@ -50,41 +50,8 @@ const readme = read("README.md");
 assert.match(readme, /## Repurpose Audits/);
 assert.match(readme, /## GitHub Issue Sync/);
 assert.match(readme, /## Knowledge Base Commands/);
-assert.match(readme, /## ChatGPT MCP Adapter/);
-assert.match(readme, /## Repository Split/);
+assert.match(readme, /## Plugin Repo/);
 assert.match(readme, /Query/);
 assert.match(readme, /Lint/);
-
-const obsidianTemplate = read("templates/obsidian/README.md");
-assert.match(obsidianTemplate, /standalone Obsidian template seed/);
-assert.match(obsidianTemplate, /does not include the ChatGPT\/MCP server/);
-
-const obsidianPackage = read("templates/obsidian/package.json");
-assert.match(obsidianPackage, /pulseboard-obsidian-template/);
-assert.doesNotMatch(obsidianPackage, /mcp:http|@modelcontextprotocol/);
-
-const chatgptMcp = read("plugins/chatgpt-mcp/README.md");
-assert.match(chatgptMcp, /GitHub-backed mode/);
-assert.match(chatgptMcp, /Streamable HTTP/);
-assert.match(chatgptMcp, /Render Deployment/);
-assert.match(chatgptMcp, /PULSEBOARD_INSTALLS_PATH=\/var\/data\/pulseboard-installs\.json/);
-assert.match(chatgptMcp, /GITHUB_APP_ID/);
-assert.match(chatgptMcp, /GITHUB_APP_PRIVATE_KEY/);
-assert.match(chatgptMcp, /PULSEBOARD_ENABLE_WRITE_TOOLS=1/);
-assert.match(chatgptMcp, /PULSEBOARD_ALLOW_NOAUTH_WRITES=1/);
-assert.match(chatgptMcp, /verifies bearer JWTs/);
-assert.match(chatgptMcp, /create_ingest_pr/);
-assert.match(chatgptMcp, /create_task_pr/);
-assert.match(chatgptMcp, /update_task_pr/);
-assert.match(chatgptMcp, /open pull requests instead of committing directly to `main`/);
-
-const render = read("render.yaml");
-assert.match(render, /type: web/);
-assert.match(render, /runtime: node/);
-assert.match(render, /startCommand: npm start/);
-assert.match(render, /mountPath: \/var\/data/);
-assert.match(render, /PULSEBOARD_INSTALLS_PATH/);
-assert.match(render, /GITHUB_APP_ID/);
-assert.match(render, /GITHUB_APP_PRIVATE_KEY/);
 
 console.log("workflow documentation tests passed");
