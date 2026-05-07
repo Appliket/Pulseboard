@@ -1,6 +1,6 @@
 # Pulseboard Template
 
-Pulseboard Template is a local-first project-management, knowledge-base, and daily activity digest starter. The primary workflow is the Karpathy/LLM Wiki style markdown system: tasks, append-only evidence, maintained synthesis pages, Obsidian Kanban, queryable knowledge, and graph coherence. Plugins are secondary outbound reporting surfaces for stakeholders such as a CEO.
+Pulseboard Template is a local-first project-management, knowledge-base, and daily activity digest starter. The primary workflow is the Karpathy/LLM Wiki style markdown system: tasks, append-only evidence, maintained synthesis pages, Obsidian Kanban, queryable knowledge, and graph coherence. The Obsidian template seed is kept separate from the ChatGPT/MCP plugin server so a project wiki can stay small while hosted integrations can evolve independently.
 
 There is no bot listener, database, vector store, hosted service, or shared AI account in the core. Project management remains plain markdown. Integrations are outbound-only: Slack, Telegram, or future plugins receive a digest once a day.
 
@@ -47,6 +47,15 @@ npm run summary -- --date 2026-05-01 --stdout
 ```
 
 Generated summaries are written locally to `project/summaries/YYYY-MM-DD.md`. Generated summary markdown is ignored by Git by default.
+
+## Repository Split
+
+This repository now has two explicit product surfaces:
+
+- [templates/obsidian/](templates/obsidian/) is the standalone Obsidian project template. It contains the wiki, Kanban board, agent commands, append-only raw evidence folders, local daily summary scripts, and Slack/Telegram outbound digest docs.
+- The repository root is the Pulseboard plugin package. It contains the ChatGPT/MCP adapter, onboarding service, HTTP API route, Render/Vercel deployment files, plugin documentation, and tests.
+
+Hosted onboarding uses the Obsidian template seed when it creates or initializes a GitHub repository. New project repos do not receive `tools/pulseboard-mcp.js`, `plugins/chatgpt-mcp/`, `api/`, `render.yaml`, or `vercel.json`; those stay with the plugin package.
 
 ## Automatic Codex Startup
 

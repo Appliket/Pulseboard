@@ -1,8 +1,8 @@
 {
-  "name": "pulseboard-template",
+  "name": "pulseboard-plugin",
   "version": "0.2.0",
   "private": true,
-  "description": "Local-first project wiki, task board, knowledge base, daily digest, and ChatGPT MCP adapter.",
+  "description": "Pulseboard ChatGPT/MCP plugin package plus standalone Obsidian template seed.",
   "type": "commonjs",
   "scripts": {
     "init": "node tools/init-template.js",

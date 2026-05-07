@@ -53,6 +53,11 @@ assert.match(byPath.get("README.md"), /^# Client Portal Pulseboard/);
 assert.match(byPath.get("project/config.md"), /"github": "acme\/client-portal"/);
 assert.ok(byPath.has("project/board.md"));
 assert.ok(byPath.has("raw/requests/.gitkeep"));
+assert.ok(byPath.has(".codex/config.toml"));
+assert.ok(!byPath.has("tools/pulseboard-mcp.js"));
+assert.ok(!byPath.has("plugins/chatgpt-mcp/README.md"));
+assert.doesNotMatch(byPath.get("package.json"), /mcp:http|@modelcontextprotocol/);
+assert.doesNotMatch(byPath.get("project/info/knowledge-base.md"), /ChatGPT Adapter/);
 
 const { privateKey } = crypto.generateKeyPairSync("rsa", { modulusLength: 2048 });
 const jwt = createGitHubAppJwt({

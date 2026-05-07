@@ -51,8 +51,17 @@ assert.match(readme, /## Repurpose Audits/);
 assert.match(readme, /## GitHub Issue Sync/);
 assert.match(readme, /## Knowledge Base Commands/);
 assert.match(readme, /## ChatGPT MCP Adapter/);
+assert.match(readme, /## Repository Split/);
 assert.match(readme, /Query/);
 assert.match(readme, /Lint/);
+
+const obsidianTemplate = read("templates/obsidian/README.md");
+assert.match(obsidianTemplate, /standalone Obsidian template seed/);
+assert.match(obsidianTemplate, /does not include the ChatGPT\/MCP server/);
+
+const obsidianPackage = read("templates/obsidian/package.json");
+assert.match(obsidianPackage, /pulseboard-obsidian-template/);
+assert.doesNotMatch(obsidianPackage, /mcp:http|@modelcontextprotocol/);
 
 const chatgptMcp = read("plugins/chatgpt-mcp/README.md");
 assert.match(chatgptMcp, /GitHub-backed mode/);

@@ -5,6 +5,7 @@ const crypto = require("crypto");
 const { buildConfig, configMarkdown, kebab, readmeMarkdown } = require("./init-template");
 
 const ROOT = path.resolve(__dirname, "..");
+const OBSIDIAN_TEMPLATE_ROOT = path.join(ROOT, "templates/obsidian");
 
 function parseInstallMappings(value) {
   if (!value) return {};
@@ -95,6 +96,7 @@ function templateFiles(input = {}) {
     "AGENTS.md",
     "package.json",
     "plugins.example.json",
+    ".codex/config.toml",
     "commands/Add.md",
     "commands/Check.md",
     "commands/Configure.md",
@@ -113,16 +115,14 @@ function templateFiles(input = {}) {
     "project/checks/check-template.md",
     "plugins/slack/README.md",
     "plugins/telegram/README.md",
-    "plugins/chatgpt-mcp/README.md",
     "tools/agent-startup-summary.js",
     "tools/codex-startup-summary.js",
     "tools/daily-summary.js",
     "tools/init-template.js",
-    "tools/pulseboard-mcp.js",
   ];
   const files = [];
   for (const file of seedPaths) {
-    const absolute = path.join(ROOT, file);
+    const absolute = path.join(OBSIDIAN_TEMPLATE_ROOT, file);
     if (generated.has(file)) files.push({ path: file, content: generated.get(file) });
     else if (fs.existsSync(absolute)) files.push({ path: file, content: fs.readFileSync(absolute, "utf8") });
   }
@@ -292,6 +292,7 @@ async function setupPulseboardRepository(input = {}, options = {}) {
 }
 
 module.exports = {
+  OBSIDIAN_TEMPLATE_ROOT,
   onboardingSchema,
   createGitHubAppJwt,
   githubAuthToken,
